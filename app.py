@@ -82,7 +82,7 @@ async def get_frontend():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Live Insurance Risk & Quote Co-Pilot</title>
+        <title>Sunny</title>
         <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
         <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
         <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -169,20 +169,21 @@ async def get_frontend():
                 right: 0;
                 bottom: 0;
                 background: 
-                    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-                    radial-gradient(circle at 75% 75%, rgba(124, 58, 237, 0.05) 0%, transparent 50%);
+                    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+                    radial-gradient(circle at 75% 75%, rgba(124, 58, 237, 0.03) 0%, transparent 50%);
                 pointer-events: none;
             }
             
-            /* Professional Card Styling */
+            /* Professional Island Card Styling */
             .fintech-card {
                 background: white;
-                border-radius: 16px;
-                box-shadow: var(--shadow-lg);
-                border: 1px solid var(--gray-200);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 24px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.8);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 position: relative;
                 overflow: hidden;
+                backdrop-filter: blur(10px);
             }
             
             .fintech-card::before {
@@ -191,26 +192,27 @@ async def get_frontend():
                 top: 0;
                 left: 0;
                 right: 0;
-                height: 2px;
-                background: var(--gradient-primary);
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
             }
             
             .fintech-card:hover {
-                transform: translateY(-4px);
-                box-shadow: var(--shadow-2xl);
-                border-color: var(--gray-300);
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+                border-color: rgba(59, 130, 246, 0.2);
             }
             
             /* Professional Header */
             .fintech-header {
                 background: white;
-                border-radius: 16px;
-                padding: 2rem;
+                border-radius: 28px;
+                padding: 3rem;
                 margin-bottom: 2rem;
-                box-shadow: var(--shadow-md);
-                border: 1px solid var(--gray-200);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.8);
                 position: relative;
                 overflow: hidden;
+                backdrop-filter: blur(10px);
             }
             
             .fintech-header::before {
@@ -219,8 +221,8 @@ async def get_frontend():
                 top: 0;
                 left: 0;
                 right: 0;
-                height: 3px;
-                background: var(--gradient-primary);
+                height: 2px;
+                background: linear-gradient(90deg, transparent, var(--primary-brand), transparent);
             }
             
             .brand-title {
@@ -244,18 +246,20 @@ async def get_frontend():
             }
             
             .status-item {
-                background: var(--bg-tertiary);
-                border-radius: 12px;
-                padding: 1rem;
+                background: rgba(248, 250, 252, 0.8);
+                border-radius: 20px;
+                padding: 1.5rem;
                 text-align: center;
-                border: 1px solid var(--gray-200);
-                transition: all 0.2s ease;
+                border: 1px solid rgba(226, 232, 240, 0.6);
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
             }
             
             .status-item:hover {
                 background: white;
-                box-shadow: var(--shadow-md);
-                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+                transform: translateY(-4px);
+                border-color: rgba(59, 130, 246, 0.2);
             }
             
             .status-value {
@@ -273,21 +277,22 @@ async def get_frontend():
             
             /* Modern Input Styling */
             .fintech-input {
-                background: white;
-                border: 2px solid var(--gray-300);
-                border-radius: 12px;
-                padding: 0.875rem 1rem;
+                background: rgba(255, 255, 255, 0.9);
+                border: 2px solid rgba(226, 232, 240, 0.8);
+                border-radius: 18px;
+                padding: 1rem 1.25rem;
                 font-size: 0.95rem;
-                transition: all 0.2s ease;
+                transition: all 0.3s ease;
                 color: var(--gray-800);
                 font-weight: 500;
                 width: 100%;
+                backdrop-filter: blur(10px);
             }
             
             .fintech-input:focus {
                 outline: none;
                 border-color: var(--primary-brand);
-                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+                box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08);
                 background: white;
             }
             
@@ -300,19 +305,19 @@ async def get_frontend():
             .fintech-button {
                 background: var(--gradient-primary);
                 border: none;
-                border-radius: 12px;
+                border-radius: 18px;
                 color: white;
                 font-weight: 600;
-                padding: 0.875rem 1.5rem;
-                transition: all 0.2s ease;
-                box-shadow: var(--shadow-md);
+                padding: 1rem 1.75rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 20px rgba(37, 99, 235, 0.25);
                 cursor: pointer;
                 font-size: 0.95rem;
             }
             
             .fintech-button:hover {
                 transform: translateY(-2px);
-                box-shadow: var(--shadow-lg);
+                box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
                 background: var(--gradient-primary);
                 filter: brightness(1.05);
             }
@@ -326,14 +331,14 @@ async def get_frontend():
             
             /* Metric Cards */
             .metric-card {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 position: relative;
                 overflow: hidden;
             }
             
             .metric-card:hover {
-                transform: translateY(-6px);
-                box-shadow: var(--shadow-2xl);
+                transform: translateY(-8px);
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
             }
             
             /* Professional Risk Colors */
@@ -442,11 +447,12 @@ async def get_frontend():
             
             /* Notifications */
             .fintech-notification {
-                background: white;
-                border-radius: 12px;
-                border: 1px solid var(--gray-200);
-                box-shadow: var(--shadow-xl);
-                animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+                animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                backdrop-filter: blur(15px);
             }
             
             @keyframes slideInRight {
@@ -457,24 +463,24 @@ async def get_frontend():
             /* Demo Controls */
             .demo-button {
                 border: none;
-                border-radius: 12px;
-                padding: 1rem;
+                border-radius: 20px;
+                padding: 1.25rem;
                 font-weight: 600;
-                transition: all 0.2s ease;
+                transition: all 0.3s ease;
                 cursor: pointer;
                 text-align: center;
-                min-height: 100px;
+                min-height: 110px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                gap: 0.5rem;
-                box-shadow: var(--shadow-md);
+                gap: 0.75rem;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
             }
             
             .demo-button:hover {
-                transform: translateY(-3px);
-                box-shadow: var(--shadow-lg);
+                transform: translateY(-4px);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
             }
             
             .demo-button:disabled {
@@ -496,25 +502,26 @@ async def get_frontend():
             
             /* Info Panels */
             .info-panel {
-                background: var(--bg-tertiary);
-                border: 1px solid var(--gray-200);
-                border-radius: 12px;
-                padding: 1rem;
+                background: rgba(248, 250, 252, 0.6);
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                border-radius: 20px;
+                padding: 1.5rem;
+                backdrop-filter: blur(10px);
             }
             
             .info-panel-success {
-                background: rgba(16, 185, 129, 0.05);
-                border-color: rgba(16, 185, 129, 0.2);
+                background: rgba(16, 185, 129, 0.03);
+                border-color: rgba(16, 185, 129, 0.15);
             }
             
             .info-panel-warning {
-                background: rgba(245, 158, 11, 0.05);
-                border-color: rgba(245, 158, 11, 0.2);
+                background: rgba(245, 158, 11, 0.03);
+                border-color: rgba(245, 158, 11, 0.15);
             }
             
             .info-panel-error {
-                background: rgba(239, 68, 68, 0.05);
-                border-color: rgba(239, 68, 68, 0.2);
+                background: rgba(239, 68, 68, 0.03);
+                border-color: rgba(239, 68, 68, 0.15);
             }
         </style>
     </head>
@@ -775,15 +782,12 @@ async def get_frontend():
                             {/* Professional Fintech Header */}
                             <div className="fintech-header text-center">
                                 <div className="flex items-center justify-center mb-6">
-                                    <div className="bg-gradient-primary p-4 rounded-2xl mr-6 shadow-lg">
-                                        <i className="fas fa-shield-alt text-3xl text-white"></i>
-                                    </div>
                                     <div>
                                         <h1 className="text-5xl font-bold brand-title mb-2">
-                                            InsureTech Pro
+                                            Sunny
                                         </h1>
                                         <div className="brand-subtitle text-xl">
-                                            Risk Intelligence Platform
+                                            Modern Risk Intelligence Platform
                                         </div>
                                     </div>
                                     {isLive && (
@@ -834,16 +838,15 @@ async def get_frontend():
                             <div className="grid lg:grid-cols-3 gap-6 mb-6">
                                 {/* Professional Input Section */}
                                 <div className="lg:col-span-1">
-                                    <div className="fintech-card p-8">
-                                        <div className="flex items-center mb-6">
-                                            <div className="bg-gradient-primary p-3 rounded-xl mr-4">
-                                                <i className="fas fa-search text-white text-lg"></i>
+                                    <div className="fintech-card p-8">                                            <div className="flex items-center mb-6">
+                                                <div className="bg-gradient-primary p-4 rounded-2xl mr-4 shadow-lg">
+                                                    <i className="fas fa-search text-white text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-bold text-primary">Risk Assessment</h2>
+                                                    <p className="text-secondary text-sm">Analyze property risk factors</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h2 className="text-xl font-bold text-primary">Risk Assessment</h2>
-                                                <p className="text-secondary text-sm">Analyze property risk factors</p>
-                                            </div>
-                                        </div>
                                         
                                         <div className="space-y-6">
                                             <div>
@@ -923,8 +926,8 @@ async def get_frontend():
                                         {/* Risk Score Card */}
                                         <div className={`fintech-card p-8 metric-card ${alertAnimating ? 'alert-pulse' : ''}`}>
                                             <div className="flex items-center mb-6">
-                                                <div className="bg-gradient-primary p-3 rounded-xl mr-4">
-                                                    <i className="fas fa-chart-line text-white text-lg"></i>
+                                                <div className="bg-gradient-primary p-4 rounded-2xl mr-4 shadow-lg">
+                                                    <i className="fas fa-chart-line text-white text-xl"></i>
                                                 </div>
                                                 <div>
                                                     <h3 className="text-xl font-bold text-primary">Risk Score</h3>
@@ -982,8 +985,8 @@ async def get_frontend():
                                         {/* Insurance Quote Card */}
                                         <div className={`fintech-card p-8 metric-card ${alertAnimating ? 'alert-pulse' : ''}`}>
                                             <div className="flex items-center mb-6">
-                                                <div className="bg-gradient-success p-3 rounded-xl mr-4">
-                                                    <i className="fas fa-dollar-sign text-white text-lg"></i>
+                                                <div className="bg-gradient-success p-4 rounded-2xl mr-4 shadow-lg">
+                                                    <i className="fas fa-dollar-sign text-white text-xl"></i>
                                                 </div>
                                                 <div>
                                                     <h3 className="text-xl font-bold text-primary">Monthly Premium</h3>
@@ -1035,16 +1038,15 @@ async def get_frontend():
 
                                     {/* Risk Analysis Summary */}
                                     <div className={`fintech-card p-8 ${alertAnimating ? 'alert-pulse' : ''}`}>
-                                        <div className="flex justify-between items-center mb-6">
-                                            <div className="flex items-center">
-                                                <div className="bg-gradient-purple p-3 rounded-xl mr-4">
-                                                    <i className="fas fa-chart-bar text-white text-lg"></i>
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-primary">Risk Analysis Report</h3>
-                                                    <p className="text-secondary text-sm">AI-powered comprehensive assessment</p>
-                                                </div>
+                                        <div className="flex justify-between items-center mb-6">                                        <div className="flex items-center">
+                                            <div className="bg-gradient-purple p-4 rounded-2xl mr-4 shadow-lg">
+                                                <i className="fas fa-chart-bar text-white text-xl"></i>
                                             </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-primary">Risk Analysis Report</h3>
+                                                <p className="text-secondary text-sm">AI-powered comprehensive assessment</p>
+                                            </div>
+                                        </div>
                                             {lastUpdate && !loadingAnalysis && (
                                                 <div className="text-right">
                                                     <div className="text-sm text-gray-600 flex items-center justify-end font-medium">
@@ -1135,16 +1137,15 @@ async def get_frontend():
 
                             {/* Professional Demo Controls */}
                             <div className="fintech-card p-8">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center">
-                                        <div className="bg-gradient-purple p-4 rounded-xl mr-4">
-                                            <i className="fas fa-flask text-white text-xl"></i>
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-primary">Demo Controls & Test Scenarios</h2>
-                                            <p className="text-secondary mt-1">Simulate real-world events and observe risk assessment updates</p>
-                                        </div>
+                                <div className="flex items-center justify-between mb-6">                                <div className="flex items-center">
+                                    <div className="bg-gradient-purple p-5 rounded-2xl mr-4 shadow-lg">
+                                        <i className="fas fa-flask text-white text-2xl"></i>
                                     </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-primary">Demo Controls & Test Scenarios</h2>
+                                        <p className="text-secondary mt-1">Simulate real-world events and observe risk assessment updates</p>
+                                    </div>
+                                </div>
                                     {(alertAnimating || isLive) && (
                                         <div className="live-indicator">
                                             <i className="fas fa-satellite-dish text-xs mr-2"></i>PROCESSING
