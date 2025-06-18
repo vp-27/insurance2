@@ -1,0 +1,9 @@
+{
+  "source": "demo_news",
+  "timestamp": "2025-06-18T15:57:48.909166",
+  "location": "456 Oak Street, Austin, TX",
+  "content": "DEMO: Construction accident blocks major intersection, emergency services on scene.",
+  "type": "news",
+  "severity": "medium",
+  "is_demo": true
+}
