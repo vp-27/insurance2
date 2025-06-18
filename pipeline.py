@@ -31,37 +31,61 @@ class LiveRAGPipeline:
     def setup_pathway_pipeline(self):
         """Setup Pathway streaming pipeline"""
         try:
-            # Create input table from JSON files in streaming mode
-            self.input_table = pw.io.json.read(
-                self.data_dir,
-                schema=pw.schema_from_types(
-                    source=str,
-                    timestamp=str,
-                    location=str,
-                    content=str,
-                    type=str
-                ),
-                mode="streaming",
-                with_metadata=True
+            # Use Pathway's filesystem connector to watch JSON files
+            # First, ensure we have some initial data
+            os.makedirs(self.data_dir, exist_ok=True)
+            
+            # Create an initial test file if directory is empty
+            files_in_dir = [f for f in os.listdir(self.data_dir) if f.endswith('.json')]
+            if not files_in_dir:
+                initial_data = {
+                    'source': 'system_init',
+                    'timestamp': datetime.now().isoformat(),
+                    'location': 'system',
+                    'content': 'System initialized - monitoring for live data feeds',
+                    'type': 'system'
+                }
+                with open(os.path.join(self.data_dir, 'init.json'), 'w') as f:
+                    json.dump(initial_data, f, indent=2)
+            
+            # Define schema for our data
+            class InputSchema(pw.Schema):
+                source: str
+                timestamp: str
+                location: str
+                content: str
+                type: str
+            
+            # Use Pathway's filesystem connector for streaming JSON files
+            self.input_table = pw.io.fs.read(
+                path=self.data_dir,
+                format="json",
+                schema=InputSchema,
+                mode="streaming"
             )
             
-            # Transform and process the data
-            self.processed_table = self.input_table.select(
-                source=self.input_table.source,
-                timestamp=self.input_table.timestamp,
-                location=self.input_table.location,
-                content=self.input_table.content,
-                type=self.input_table.type,
-                processed_time=pw.this.timestamp
-            )
-            
-            print("Pathway pipeline initialized successfully")
+            # Process the data stream
+            if self.input_table is not None:
+                # Apply real-time transformations
+                self.processed_table = self.input_table.select(
+                    source=pw.this.source,
+                    timestamp=pw.this.timestamp,
+                    location=pw.this.location,
+                    content=pw.this.content,
+                    type=pw.this.type,
+                    processed_at=pw.now()
+                )
+                
+                print("Pathway streaming pipeline initialized successfully")
+                return
             
         except Exception as e:
-            print(f"Error setting up Pathway pipeline: {e}")
-            # Fallback to manual file monitoring
-            self.input_table = None
-            self.processed_table = None
+            print(f"Pathway setup error: {e}")
+        
+        print("Using manual file monitoring as primary method")
+        # Use manual file monitoring as the primary method for this demo
+        self.input_table = None
+        self.processed_table = None
     
     def embed_text(self, text: str) -> np.ndarray:
         """Generate embeddings for text"""
@@ -192,66 +216,151 @@ class LiveRAGPipeline:
         address_match = re.search(r'at ([^?]+)\?', prompt)
         address = address_match.group(1) if address_match else "the specified location"
         
-        # Simple rule-based response generation
-        if "fire" in prompt.lower():
-            return f"""**Risk Assessment for {address}**
+        # Analyze prompt content for specific risk factors
+        prompt_lower = prompt.lower()
+        
+        if "fire" in prompt_lower or "4-alarm" in prompt_lower:
+            return f"""**🔥 CRITICAL RISK ASSESSMENT for {address}**
 
-**Risk Summary:** Critical fire incident detected in the immediate vicinity. This represents a significant operational risk that could affect property values, safety protocols, and insurance liability.
+**Risk Summary:** CRITICAL FIRE INCIDENT detected in immediate vicinity. Active 4-alarm fire with emergency services deployment creates severe operational risk affecting property values, safety protocols, and insurance liability.
 
 **Risk Score:** 9/10
 
-**Insurance Quote:** Based on the elevated risk profile, the estimated monthly premium for $1M coverage is $950.
+**Insurance Quote:** $950/month for $1M coverage (90% increase from base rate)
 
-**Factors Considered:**
-- Active fire emergency in proximity
-- Potential for smoke and water damage
-- Increased emergency service activity
-- Temporary accessibility restrictions"""
+**Critical Factors:**
+• Active fire emergency with multi-unit response
+• Extreme risk of smoke and water damage from firefighting efforts
+• Potential structural damage from heat exposure
+• Emergency service accessibility restrictions
+• Temporary evacuation protocols may be required
 
-        elif "flood" in prompt.lower():
-            return f"""**Risk Assessment for {address}**
+**Immediate Recommendations:**
+• Activate emergency response plan
+• Document all safety measures
+• Coordinate with emergency services"""
 
-**Risk Summary:** Flood warning or water-related incident detected. This poses significant risk to property foundations, electrical systems, and overall structural integrity.
+        elif "flood" in prompt_lower or "water" in prompt_lower:
+            return f"""**🌊 HIGH RISK ASSESSMENT for {address}**
+
+**Risk Summary:** FLOOD WARNING detected with rising water levels. Significant risk to property foundations, electrical systems, and structural integrity requiring immediate attention.
 
 **Risk Score:** 7/10
 
-**Insurance Quote:** The estimated monthly premium for $1M coverage is $850, reflecting increased flood risk exposure.
+**Insurance Quote:** $850/month for $1M coverage (70% increase from base rate)
 
-**Factors Considered:**
-- Water damage potential
-- Infrastructure vulnerability
-- Emergency response requirements
-- Potential business interruption"""
+**Key Risk Factors:**
+• Flash flood conditions with rapidly rising water
+• Foundation and basement flooding potential
+• Electrical system vulnerability
+• HVAC equipment damage risk
+• Business interruption likelihood
 
-        elif "crime" in prompt.lower():
-            return f"""**Risk Assessment for {address}**
+**Mitigation Actions:**
+• Implement flood protection measures
+• Elevate critical equipment
+• Monitor drainage systems"""
 
-**Risk Summary:** Increased security incidents reported in the area. This may indicate higher theft risk and potential safety concerns for the property.
+        elif "earthquake" in prompt_lower or "magnitude" in prompt_lower:
+            return f"""**🏗️ HIGH RISK ASSESSMENT for {address}**
 
-**Risk Score:** 5/10
+**Risk Summary:** SEISMIC ACTIVITY detected. Magnitude 4.2 earthquake requires structural assessment and elevated monitoring for potential aftershocks and building integrity issues.
 
-**Insurance Quote:** The estimated monthly premium for $1M coverage is $750, accounting for elevated security risks.
+**Risk Score:** 8/10
 
-**Factors Considered:**
-- Local crime activity
-- Security system requirements
-- Law enforcement response times
-- Property protection measures needed"""
+**Insurance Quote:** $900/month for $1M coverage (80% increase from base rate)
+
+**Seismic Risk Factors:**
+• Structural integrity concerns requiring inspection
+• Potential aftershock activity
+• Building code compliance verification needed
+• Foundation stability assessment required
+• Utility line disruption possible
+
+**Required Actions:**
+• Schedule immediate structural inspection
+• Review seismic safety protocols
+• Check utility connections"""
+
+        elif "crime" in prompt_lower or "police" in prompt_lower:
+            return f"""**🚨 ELEVATED RISK ASSESSMENT for {address}**
+
+**Risk Summary:** SECURITY INCIDENT with increased law enforcement presence. Enhanced security measures required due to elevated crime activity and potential ongoing threat assessment.
+
+**Risk Score:** 6/10
+
+**Insurance Quote:** $800/month for $1M coverage (60% increase from base rate)
+
+**Security Risk Factors:**
+• Active police investigation in vicinity
+• Potential for continued criminal activity
+• Security system effectiveness concerns
+• Staff safety protocols activation needed
+• Property access restrictions possible
+
+**Security Enhancements:**
+• Increase surveillance monitoring
+• Review access control systems
+• Coordinate with local law enforcement"""
+
+        elif "traffic" in prompt_lower or "collision" in prompt_lower:
+            return f"""**🚗 MODERATE RISK ASSESSMENT for {address}**
+
+**Risk Summary:** TRAFFIC INCIDENT affecting area accessibility. Multi-vehicle collision creating temporary operational disruptions and emergency service response delays.
+
+**Risk Score:** 4/10
+
+**Insurance Quote:** $700/month for $1M coverage (40% increase from base rate)
+
+**Traffic Impact Factors:**
+• Emergency service response delays
+• Customer/client access limitations
+• Delivery and logistics disruptions
+• Potential secondary incident risks
+
+**Operational Adjustments:**
+• Plan alternative access routes
+• Notify stakeholders of delays
+• Monitor traffic conditions"""
+
+        elif "infrastructure" in prompt_lower or "power" in prompt_lower:
+            return f"""**⚡ HIGH RISK ASSESSMENT for {address}**
+
+**Risk Summary:** CRITICAL INFRASTRUCTURE FAILURE affecting power grid stability. Multi-block power instability creates significant operational and safety risks requiring emergency protocols.
+
+**Risk Score:** 7/10
+
+**Insurance Quote:** $850/month for $1M coverage (70% increase from base rate)
+
+**Infrastructure Risk Factors:**
+• Power grid instability affecting operations
+• HVAC system failure potential
+• Security system vulnerability
+• Data system backup requirements
+• Emergency lighting activation needed
+
+**Emergency Measures:**
+• Activate backup power systems
+• Implement data protection protocols
+• Monitor utility restoration efforts"""
 
         else:
-            return f"""**Risk Assessment for {address}**
+            return f"""**✅ STANDARD RISK ASSESSMENT for {address}**
 
-**Risk Summary:** Current analysis shows normal risk levels for the area. No significant incidents or weather alerts detected that would materially impact the property's risk profile.
+**Risk Summary:** Current analysis indicates NORMAL risk levels for the area. No significant incidents, weather alerts, or emergency conditions detected that would materially impact the property's risk profile.
 
 **Risk Score:** 2/10
 
-**Insurance Quote:** The estimated monthly premium for $1M coverage is $600, reflecting standard risk exposure.
+**Insurance Quote:** $600/month for $1M coverage (standard rate)
 
-**Factors Considered:**
-- No active weather alerts
-- Normal emergency service activity
-- Standard area risk profile
-- Baseline coverage requirements"""
+**Baseline Factors:**
+• No active weather or emergency alerts
+• Normal emergency service activity levels
+• Standard area risk profile maintained
+• Routine coverage requirements
+• No elevated threat indicators
+
+**Status:** All systems normal, continue standard monitoring protocols."""
     
     async def query_rag(self, address: str, query: str) -> Dict[str, Any]:
         """Main RAG query function"""

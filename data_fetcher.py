@@ -281,7 +281,7 @@ class DataFetcher:
                 'source': 'manual_injection',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'4-alarm fire reported near {address}. Emergency services on scene.',
+                'content': f'4-alarm fire reported near {address}. Emergency services on scene with multiple fire trucks and ambulances responding.',
                 'type': 'fire',
                 'severity': 'critical'
             },
@@ -289,7 +289,7 @@ class DataFetcher:
                 'source': 'manual_injection',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Flash flood warning issued for area near {address}. Water levels rising.',
+                'content': f'Flash flood warning issued for area near {address}. Water levels rising rapidly, evacuation orders in effect.',
                 'type': 'flood',
                 'severity': 'high'
             },
@@ -297,9 +297,33 @@ class DataFetcher:
                 'source': 'manual_injection',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Increased police activity reported near {address} due to security incident.',
+                'content': f'Increased police activity reported near {address} due to security incident. SWAT team deployment confirmed.',
                 'type': 'crime',
                 'severity': 'medium'
+            },
+            'earthquake': {
+                'source': 'manual_injection',
+                'timestamp': datetime.now().isoformat(),
+                'location': address,
+                'content': f'Magnitude 4.2 earthquake detected near {address}. Structural inspections recommended for all buildings.',
+                'type': 'earthquake',
+                'severity': 'high'
+            },
+            'traffic': {
+                'source': 'manual_injection',
+                'timestamp': datetime.now().isoformat(),
+                'location': address,
+                'content': f'Major traffic incident near {address}. Multi-vehicle collision blocking main thoroughfare.',
+                'type': 'traffic',
+                'severity': 'medium'
+            },
+            'infrastructure': {
+                'source': 'manual_injection',
+                'timestamp': datetime.now().isoformat(),
+                'location': address,
+                'content': f'Critical infrastructure failure near {address}. Power grid instability affecting multiple city blocks.',
+                'type': 'infrastructure',
+                'severity': 'high'
             }
         }
         
