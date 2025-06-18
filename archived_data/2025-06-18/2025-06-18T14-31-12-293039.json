@@ -1,0 +1,8 @@
+{
+  "source": "simulated_traffic",
+  "timestamp": "2025-06-18T14:31:12.292979",
+  "location": "40.7128,-74.006",
+  "content": "Traffic incident: Vehicle breakdown in tunnel. Emergency services responding.",
+  "type": "traffic",
+  "severity": "medium"
+}

@@ -212,24 +212,28 @@ class LiveRAGPipeline:
                 print("⚠️ Invalid API key detected, using simulation mode")
                 return self.simulate_llm_response(prompt)
             
+            print(f"🤖 Calling OpenRouter API with model: {self.model_name}")
             completion = self.openai_client.chat.completions.create(
                 extra_headers={
-                    "HTTP-Referer": "https://your-site.com",  # Optional. Site URL for rankings
-                    "X-Title": "Insurance Risk Analysis",     # Optional. Site title for rankings
+                    "HTTP-Referer": "https://localhost:8000",  # Update with actual domain
+                    "X-Title": "Live Insurance Risk Assessment",     # Site title for rankings
                 },
                 model=self.model_name,
                 messages=[
+                    {"role": "system", "content": "You are an expert insurance underwriter. Analyze the data and distinguish between real news incidents and test/simulated alerts. Provide accurate risk assessments based on actual events only."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.7,
-                max_tokens=500
+                temperature=0.3,  # Lower temperature for more consistent results
+                max_tokens=800    # Increased for more detailed responses
             )
             
-            return completion.choices[0].message.content
+            response = completion.choices[0].message.content
+            print(f"✅ OpenRouter API response received ({len(response)} chars)")
+            return response
             
         except Exception as e:
             error_msg = str(e)
-            print(f"LLM API error: {e}")
+            print(f"🚨 LLM API error: {e}")
             
             # Check if it's a 401 authentication error
             if "401" in error_msg or "auth" in error_msg.lower() or "unauthorized" in error_msg.lower():
@@ -384,12 +388,18 @@ class LiveRAGPipeline:
 
 **Insurance Quote:** $600/month for $1M coverage (standard rate)
 
-**Baseline Factors:**
-• No active weather or emergency alerts
-• Normal emergency service activity levels
+**Baseline Assessment:**
+• No active weather or emergency alerts detected
 • Standard area risk profile maintained
-• Routine coverage requirements
-• No elevated threat indicators
+• Normal emergency service activity levels
+• Routine coverage requirements apply
+• No elevated threat indicators present
+
+**Regional Factors:**
+• Base location risk assessment: Low to moderate
+• Standard building and fire safety protocols in effect
+• Adequate emergency services coverage
+• No unusual environmental hazards detected
 
 **Status:** All systems normal, continue standard monitoring protocols."""
     
@@ -413,24 +423,78 @@ class LiveRAGPipeline:
         # Build enhanced prompt with location context
         location_context = self.build_location_context(location_factors)
         
-        prompt = f"""You are an AI Insurance Underwriting Assistant. Analyze the location and recent incidents:
+        # Analyze the data sources to distinguish between real and test alerts
+        real_incidents = []
+        test_incidents = []
+        
+        for doc in relevant_docs:
+            source = doc['metadata'].get('source', '')
+            content = doc['content']
+            
+            # Identify test/demo/simulated data
+            if any(indicator in source.lower() for indicator in ['manual_injection', 'test', 'simulated', 'demo_test', 'demo_news']):
+                test_incidents.append(f"DEMO/TEST ALERT: {content}")
+            elif source in ['newsdata_io', 'nyc_open_data', 'chicago_open_data', 'usgs_earthquake', 'nws_weather']:
+                real_incidents.append(f"REAL INCIDENT: {content}")
+            else:
+                # For unknown source, check if content has DEMO prefix
+                if content.startswith('DEMO:'):
+                    test_incidents.append(f"DEMO ALERT: {content}")
+                else:
+                    # Unknown source, treat as real but flag
+                    real_incidents.append(f"INCIDENT: {content}")
+        
+        # Build separate context sections
+        real_context = "\n".join(real_incidents) if real_incidents else "No recent real incidents detected in the area. Location appears stable."
+        test_context = "\n".join(test_incidents) if test_incidents else "No demo/test alerts active."
+        
+        # Only include test context if there are actual test incidents
+        if test_incidents:
+            prompt = f"""You are an AI Insurance Underwriting Assistant analyzing property risk.
 
 PROPERTY: {address}
+
 LOCATION ANALYSIS:
 {location_context}
 
-RECENT INCIDENTS:
----
-{context}
----
+REAL INCIDENTS (use for risk calculation):
+{real_context}
+
+DEMO/TEST ALERTS (for reference only - DO NOT include in risk calculation):
+{test_context}
+
+CRITICAL: Base your risk assessment ONLY on REAL incidents and location factors. Demo/test alerts are simulated and should be COMPLETELY IGNORED in risk scoring. If only demo/test alerts are present and no real incidents, consider the area SAFE.
 
 Provide:
-1. Risk summary considering both location factors and recent incidents
-2. Risk score from 1 (safe) to 10 (critical)
+1. Risk summary focusing ONLY on verified real incidents and location factors
+2. Risk score from 1 (safe) to 10 (critical) - based ONLY on REAL incidents
 3. Monthly insurance quote for $1M coverage
 
 Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score)
-Factor in location-specific risks in your assessment."""
+Factor in location-specific risks but IGNORE ALL demo/test scenarios."""
+        else:
+            # No test alerts - normal assessment
+            prompt = f"""You are an AI Insurance Underwriting Assistant analyzing property risk.
+
+PROPERTY: {address}
+
+LOCATION ANALYSIS:
+{location_context}
+
+CURRENT REAL INCIDENTS:
+{real_context}
+
+Assessment Instructions:
+- If no real incidents are present, consider this a SAFE area with normal risk levels
+- Base your assessment only on verified real-world data and location factors
+- Do not invent or simulate incidents - if the area is quiet, that's a positive indicator
+
+Provide a comprehensive risk assessment including:
+1. Risk summary considering location factors and any current verified incidents
+2. Risk score from 1 (safe) to 10 (critical) based on actual conditions
+3. Monthly insurance quote for $1M coverage
+
+Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score)"""
         
         # Get LLM response
         llm_response = await self.call_llm(prompt)

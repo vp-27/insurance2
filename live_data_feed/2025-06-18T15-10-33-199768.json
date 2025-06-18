@@ -1,0 +1,9 @@
+{
+  "source": "demo_test",
+  "timestamp": "2025-06-18T15:10:33.199756",
+  "location": "11 Blanche Street, Secaucus, NJ",
+  "content": "DEMO: Increased police activity reported near 11 Blanche Street, Secaucus, NJ due to security incident. SWAT team deployment confirmed.",
+  "type": "crime",
+  "severity": "medium",
+  "is_demo": true
+}

@@ -78,8 +78,8 @@ class DataFetcher:
         """Fetch local news that might affect insurance risk"""
         try:
             if not self.news_api_key or self.news_api_key == "your_newsdata_io_api_key_here":
-                # Simulate news data if no API key
-                self.simulate_news_alerts(location)
+                # No news data available if no API key - DO NOT simulate
+                print("⚠️ No news API key configured - news data unavailable")
                 return
                 
             url = "https://newsdata.io/api/1/news"
@@ -112,7 +112,8 @@ class DataFetcher:
                 
         except Exception as e:
             print(f"News fetch error: {e}")
-            self.simulate_news_alerts(location)
+            # DO NOT fall back to simulated news for real assessments
+            # Only use simulated news when explicitly triggered via demo buttons
     
     def simulate_news_alerts(self, location: str):
         """Simulate news alerts when no API key is available"""
@@ -275,62 +276,114 @@ class DataFetcher:
             self.save_alert(crime_data)
     
     def inject_test_alert(self, address: str, alert_type: str = "fire"):
-        """Inject a test alert for demo purposes"""
+        """Inject a test alert for demo purposes - clearly marked as demo data"""
         test_alerts = {
             'fire': {
-                'source': 'manual_injection',
+                'source': 'demo_test',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'4-alarm fire reported near {address}. Emergency services on scene with multiple fire trucks and ambulances responding.',
+                'content': f'DEMO: 4-alarm fire reported near {address}. Emergency services on scene with multiple fire trucks and ambulances responding.',
                 'type': 'fire',
-                'severity': 'critical'
+                'severity': 'critical',
+                'is_demo': True
             },
             'flood': {
-                'source': 'manual_injection',
+                'source': 'demo_test',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Flash flood warning issued for area near {address}. Water levels rising rapidly, evacuation orders in effect.',
+                'content': f'DEMO: Flash flood warning issued for area near {address}. Water levels rising rapidly, evacuation orders in effect.',
                 'type': 'flood',
-                'severity': 'high'
+                'severity': 'high',
+                'is_demo': True
             },
             'crime': {
-                'source': 'manual_injection',
+                'source': 'demo_test',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Increased police activity reported near {address} due to security incident. SWAT team deployment confirmed.',
+                'content': f'DEMO: Increased police activity reported near {address} due to security incident. SWAT team deployment confirmed.',
                 'type': 'crime',
-                'severity': 'medium'
+                'severity': 'medium',
+                'is_demo': True
             },
             'earthquake': {
-                'source': 'manual_injection',
+                'source': 'demo_test',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Magnitude 4.2 earthquake detected near {address}. Structural inspections recommended for all buildings.',
+                'content': f'DEMO: Magnitude 4.2 earthquake detected near {address}. Structural inspections recommended for all buildings.',
                 'type': 'earthquake',
-                'severity': 'high'
+                'severity': 'high',
+                'is_demo': True
             },
             'traffic': {
-                'source': 'manual_injection',
+                'source': 'demo_test',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Major traffic incident near {address}. Multi-vehicle collision blocking main thoroughfare.',
+                'content': f'DEMO: Major traffic incident near {address}. Multi-vehicle collision blocking main thoroughfare.',
                 'type': 'traffic',
-                'severity': 'medium'
+                'severity': 'medium',
+                'is_demo': True
             },
             'infrastructure': {
-                'source': 'manual_injection',
+                'source': 'demo_test',
                 'timestamp': datetime.now().isoformat(),
                 'location': address,
-                'content': f'Critical infrastructure failure near {address}. Power grid instability affecting multiple city blocks.',
+                'content': f'DEMO: Critical infrastructure failure near {address}. Power grid instability affecting multiple city blocks.',
                 'type': 'infrastructure',
-                'severity': 'high'
+                'severity': 'high',
+                'is_demo': True
             }
         }
         
         alert = test_alerts.get(alert_type, test_alerts['fire'])
         self.save_alert(alert)
-        print(f"Injected {alert_type} alert for {address}")
+        print(f"Injected DEMO {alert_type} alert for {address}")
+        
+        # Also inject some demo news for context if this is a demo
+        self.inject_demo_news_alerts(address)
     
+    def inject_demo_news_alerts(self, location: str):
+        """Inject demo news alerts ONLY when demo is explicitly triggered"""
+        import random
+        
+        demo_news_alerts = [
+            {
+                'source': 'demo_news',
+                'timestamp': datetime.now().isoformat(),
+                'location': location,
+                'content': 'DEMO: Local fire department responds to commercial building fire on Main Street. Multiple units on scene.',
+                'type': 'news',
+                'severity': 'medium',
+                'is_demo': True
+            },
+            {
+                'source': 'demo_news',
+                'timestamp': datetime.now().isoformat(),
+                'location': location,
+                'content': 'DEMO: Heavy rainfall causes minor flooding in downtown area. City crews monitoring situation.',
+                'type': 'news',
+                'severity': 'low',
+                'is_demo': True
+            },
+            {
+                'source': 'demo_news',
+                'timestamp': datetime.now().isoformat(),
+                'location': location,
+                'content': 'DEMO: Construction accident blocks major intersection, emergency services on scene.',
+                'type': 'news',
+                'severity': 'medium',
+                'is_demo': True
+            }
+        ]
+        
+        # Generate 1-2 demo alerts
+        num_alerts = random.randint(1, 2)
+        selected_alerts = random.sample(demo_news_alerts, num_alerts)
+        
+        for alert in selected_alerts:
+            self.save_alert(alert)
+        
+        print(f"Injected {num_alerts} demo news alerts for {location}")
+
     def start_scheduled_fetching(self):
         """Start scheduled data fetching in background"""
         def run_schedule():

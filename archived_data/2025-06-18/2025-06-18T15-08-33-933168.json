@@ -1,0 +1,8 @@
+{
+  "source": "simulated_traffic",
+  "timestamp": "2025-06-18T15:08:33.933130",
+  "location": "40.7128,-74.006",
+  "content": "Traffic incident: Multi-vehicle collision on main road. Emergency services responding.",
+  "type": "traffic",
+  "severity": "medium"
+}

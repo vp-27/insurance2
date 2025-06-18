@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 # Import our custom modules
 from pipeline import LiveRAGPipeline
 from data_fetcher import DataFetcher
+from data_manager import DataManager
 
 # Load environment variables
 load_dotenv()
@@ -30,6 +31,7 @@ app.add_middleware(
 # Global instances
 rag_pipeline = None
 data_fetcher = None
+data_manager = None
 
 class AssessmentRequest(BaseModel):
     address: str
@@ -39,12 +41,20 @@ class TestAlertRequest(BaseModel):
     address: str
     alert_type: str = "fire"  # fire, flood, crime
 
+class DemoModeRequest(BaseModel):
+    address: str
+    include_news: bool = True
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize the application components"""
-    global rag_pipeline, data_fetcher
+    global rag_pipeline, data_fetcher, data_manager
     
     print("Initializing Live Insurance Risk Assessment System...")
+    
+    # Initialize data manager first
+    data_manager = DataManager()
+    data_manager.start_data_management()
     
     # Initialize RAG pipeline
     rag_pipeline = LiveRAGPipeline()
@@ -61,6 +71,7 @@ async def startup_event():
     data_fetcher.start_scheduled_fetching()
     
     print("System initialized successfully!")
+    print(f"🗂️ Data management active - maintaining {data_manager.max_active_files} active files")
 
 @app.get("/", response_class=HTMLResponse)
 async def get_frontend():
@@ -79,41 +90,431 @@ async def get_frontend():
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <style>
-            .gradient-bg {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
-            .card-shadow {
-                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-                border: 1px solid rgba(255,255,255,0.1);
+            
+            :root {
+                /* Modern Fintech Colors */
+                --primary-brand: #2563eb;
+                --primary-dark: #1d4ed8;
+                --primary-light: #3b82f6;
+                --accent-purple: #7c3aed;
+                --accent-emerald: #059669;
+                --accent-orange: #ea580c;
+                
+                /* Neutral Colors */
+                --gray-50: #f9fafb;
+                --gray-100: #f3f4f6;
+                --gray-200: #e5e7eb;
+                --gray-300: #d1d5db;
+                --gray-400: #9ca3af;
+                --gray-500: #6b7280;
+                --gray-600: #4b5563;
+                --gray-700: #374151;
+                --gray-800: #1f2937;
+                --gray-900: #111827;
+                
+                /* Status Colors */
+                --success: #10b981;
+                --warning: #f59e0b;
+                --error: #ef4444;
+                --info: #3b82f6;
+                
+                /* Backgrounds */
+                --bg-primary: #ffffff;
+                --bg-secondary: #f9fafb;
+                --bg-tertiary: #f3f4f6;
+                
+                /* Shadows */
+                --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                
+                /* Gradients */
+                --gradient-primary: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+                --gradient-purple: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+                --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+                --gradient-warm: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
             }
-            .pulse-animation {
-                animation: pulse 2s infinite;
+            
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                line-height: 1.6;
+                color: var(--gray-800);
+                background: var(--bg-secondary);
+                font-weight: 400;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
             }
+            
+            /* Clean Professional Background */
+            .fintech-bg {
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                min-height: 100vh;
+                position: relative;
+            }
+            
+            .fintech-bg::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: 
+                    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 75% 75%, rgba(124, 58, 237, 0.05) 0%, transparent 50%);
+                pointer-events: none;
+            }
+            
+            /* Professional Card Styling */
+            .fintech-card {
+                background: white;
+                border-radius: 16px;
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--gray-200);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .fintech-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: var(--gradient-primary);
+            }
+            
+            .fintech-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-2xl);
+                border-color: var(--gray-300);
+            }
+            
+            /* Professional Header */
+            .fintech-header {
+                background: white;
+                border-radius: 16px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+                box-shadow: var(--shadow-md);
+                border: 1px solid var(--gray-200);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .fintech-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--gradient-primary);
+            }
+            
+            .brand-title {
+                color: var(--gray-900);
+                font-weight: 800;
+                letter-spacing: -0.025em;
+                margin-bottom: 0.5rem;
+            }
+            
+            .brand-subtitle {
+                color: var(--gray-600);
+                font-weight: 500;
+                letter-spacing: 0.01em;
+            }
+            
+            .status-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+            
+            .status-item {
+                background: var(--bg-tertiary);
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: center;
+                border: 1px solid var(--gray-200);
+                transition: all 0.2s ease;
+            }
+            
+            .status-item:hover {
+                background: white;
+                box-shadow: var(--shadow-md);
+                transform: translateY(-2px);
+            }
+            
+            .status-value {
+                font-weight: 700;
+                font-size: 1.1rem;
+                color: var(--primary-brand);
+                margin-bottom: 0.25rem;
+            }
+            
+            .status-label {
+                font-size: 0.875rem;
+                color: var(--gray-600);
+                font-weight: 500;
+            }
+            
+            /* Modern Input Styling */
+            .fintech-input {
+                background: white;
+                border: 2px solid var(--gray-300);
+                border-radius: 12px;
+                padding: 0.875rem 1rem;
+                font-size: 0.95rem;
+                transition: all 0.2s ease;
+                color: var(--gray-800);
+                font-weight: 500;
+                width: 100%;
+            }
+            
+            .fintech-input:focus {
+                outline: none;
+                border-color: var(--primary-brand);
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+                background: white;
+            }
+            
+            .fintech-input::placeholder {
+                color: var(--gray-500);
+                font-weight: 400;
+            }
+            
+            /* Modern Button Styling */
+            .fintech-button {
+                background: var(--gradient-primary);
+                border: none;
+                border-radius: 12px;
+                color: white;
+                font-weight: 600;
+                padding: 0.875rem 1.5rem;
+                transition: all 0.2s ease;
+                box-shadow: var(--shadow-md);
+                cursor: pointer;
+                font-size: 0.95rem;
+            }
+            
+            .fintech-button:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+                background: var(--gradient-primary);
+                filter: brightness(1.05);
+            }
+            
+            .fintech-button:disabled {
+                opacity: 0.5;
+                transform: none;
+                cursor: not-allowed;
+                filter: none;
+            }
+            
+            /* Metric Cards */
+            .metric-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .metric-card:hover {
+                transform: translateY(-6px);
+                box-shadow: var(--shadow-2xl);
+            }
+            
+            /* Professional Risk Colors */
+            .risk-low { 
+                color: var(--success);
+                font-weight: 600;
+            }
+            .risk-medium { 
+                color: var(--warning);
+                font-weight: 600;
+            }
+            .risk-high { 
+                color: var(--accent-orange);
+                font-weight: 600;
+            }
+            .risk-critical { 
+                color: var(--error);
+                font-weight: 600;
+            }
+            
+            /* Loading States */
+            .loading-skeleton {
+                background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+                background-size: 200% 100%;
+                animation: skeletonLoading 1.5s infinite;
+                border-radius: 8px;
+            }
+            
+            @keyframes skeletonLoading {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+            
+            /* Animations */
+            .fade-in {
+                animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            @keyframes fadeInUp {
+                0% { opacity: 0; transform: translateY(20px); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+            
             .live-indicator {
-                animation: blink 1.5s infinite;
+                animation: pulse 2s infinite;
+                background: var(--gradient-success);
+                color: white;
+                font-weight: 600;
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-size: 0.875rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
             }
+            
             @keyframes pulse {
                 0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
+                50% { opacity: 0.8; }
             }
-            @keyframes blink {
-                0%, 50% { opacity: 1; }
-                51%, 100% { opacity: 0.3; }
+            
+            /* Risk Score Visualization */
+            .risk-score-circle {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+                font-weight: 800;
+                color: white;
+                position: relative;
+                margin: 0 auto 1rem;
+                box-shadow: var(--shadow-lg);
             }
-            .risk-low { color: #10b981; }
-            .risk-medium { color: #f59e0b; }
-            .risk-high { color: #ef4444; }
-            .risk-critical { color: #dc2626; }
-            .glass-card {
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
+            
+            .risk-score-inner {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
             }
-            .metric-card {
-                transition: all 0.3s ease;
+            
+            /* Progress Bar */
+            .progress-container {
+                width: 100%;
+                height: 8px;
+                background: var(--gray-200);
+                border-radius: 4px;
+                overflow: hidden;
+                margin-top: 1rem;
             }
-            .metric-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            
+            .progress-fill {
+                height: 100%;
+                border-radius: 4px;
+                transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+            }
+            
+            /* Notifications */
+            .fintech-notification {
+                background: white;
+                border-radius: 12px;
+                border: 1px solid var(--gray-200);
+                box-shadow: var(--shadow-xl);
+                animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            @keyframes slideInRight {
+                0% { transform: translateX(100%); opacity: 0; }
+                100% { transform: translateX(0); opacity: 1; }
+            }
+            
+            /* Demo Controls */
+            .demo-button {
+                border: none;
+                border-radius: 12px;
+                padding: 1rem;
+                font-weight: 600;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                text-align: center;
+                min-height: 100px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+                box-shadow: var(--shadow-md);
+            }
+            
+            .demo-button:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-lg);
+            }
+            
+            .demo-button:disabled {
+                opacity: 0.5;
+                transform: none;
+                cursor: not-allowed;
+            }
+            
+            /* Utility Classes */
+            .text-primary { color: var(--gray-900); }
+            .text-secondary { color: var(--gray-600); }
+            .text-muted { color: var(--gray-500); }
+            .text-brand { color: var(--primary-brand); }
+            
+            .bg-gradient-primary { background: var(--gradient-primary); }
+            .bg-gradient-purple { background: var(--gradient-purple); }
+            .bg-gradient-success { background: var(--gradient-success); }
+            .bg-gradient-warm { background: var(--gradient-warm); }
+            
+            /* Info Panels */
+            .info-panel {
+                background: var(--bg-tertiary);
+                border: 1px solid var(--gray-200);
+                border-radius: 12px;
+                padding: 1rem;
+            }
+            
+            .info-panel-success {
+                background: rgba(16, 185, 129, 0.05);
+                border-color: rgba(16, 185, 129, 0.2);
+            }
+            
+            .info-panel-warning {
+                background: rgba(245, 158, 11, 0.05);
+                border-color: rgba(245, 158, 11, 0.2);
+            }
+            
+            .info-panel-error {
+                background: rgba(239, 68, 68, 0.05);
+                border-color: rgba(239, 68, 68, 0.2);
             }
         </style>
     </head>
@@ -128,10 +529,13 @@ async def get_frontend():
                 const [query, setQuery] = useState('What are the current risks at this address?');
                 const [assessment, setAssessment] = useState(null);
                 const [loading, setLoading] = useState(false);
+                const [loadingAnalysis, setLoadingAnalysis] = useState(false);
                 const [autoRefresh, setAutoRefresh] = useState(false);
                 const [lastUpdate, setLastUpdate] = useState(null);
                 const [systemStats, setSystemStats] = useState(null);
                 const [isLive, setIsLive] = useState(false);
+                const [alertAnimating, setAlertAnimating] = useState(false);
+                const [notification, setNotification] = useState(null);
 
                 const getRiskColor = (score) => {
                     if (score <= 2) return 'risk-low';
@@ -170,6 +574,7 @@ async def get_frontend():
                     if (!address.trim()) return;
                     
                     setLoading(true);
+                    setLoadingAnalysis(true);
                     setIsLive(true);
                     try {
                         const response = await fetch('/get_assessment', {
@@ -192,7 +597,10 @@ async def get_frontend():
                         console.error('Error fetching assessment:', error);
                     } finally {
                         setLoading(false);
-                        setTimeout(() => setIsLive(false), 3000);
+                        setTimeout(() => {
+                            setLoadingAnalysis(false);
+                            setIsLive(false);
+                        }, 1000);
                     }
                 };
 
@@ -201,6 +609,22 @@ async def get_frontend():
                         alert('Please enter an address first');
                         return;
                     }
+                    
+                    setAlertAnimating(true);
+                    setLoadingAnalysis(true);
+                    
+                    // Show notification
+                    const alertIcons = {
+                        fire: '🔥',
+                        flood: '🌊', 
+                        crime: '🚨',
+                        earthquake: '🏗️'
+                    };
+                    
+                    setNotification({
+                        message: `${alertIcons[alertType]} ${alertType.charAt(0).toUpperCase() + alertType.slice(1)} alert injected! Processing...`,
+                        type: 'info'
+                    });
                     
                     try {
                         const response = await fetch('/inject_test_alert', {
@@ -214,15 +638,74 @@ async def get_frontend():
                         if (response.ok) {
                             // Show success animation
                             setIsLive(true);
-                            setTimeout(() => setIsLive(false), 2000);
+                            
+                            setNotification({
+                                message: `✅ Alert processed successfully! Updating risk assessment...`,
+                                type: 'success'
+                            });
                             
                             // Auto-refresh after 3 seconds
                             setTimeout(() => {
                                 fetchAssessment();
+                                setAlertAnimating(false);
+                                setNotification(null);
                             }, 3000);
                         }
                     } catch (error) {
                         console.error('Error injecting alert:', error);
+                        setAlertAnimating(false);
+                        setLoadingAnalysis(false);
+                        setNotification({
+                            message: '❌ Error processing alert. Please try again.',
+                            type: 'error'
+                        });
+                        setTimeout(() => setNotification(null), 3000);
+                    }
+                };
+
+                const activateDemoMode = async (includeNews) => {
+                    if (!address.trim()) {
+                        alert('Please enter an address first');
+                        return;
+                    }
+                    
+                    setAlertAnimating(true);
+                    setLoadingAnalysis(true);
+                    
+                    try {
+                        const response = await fetch('/activate_demo_mode', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ address, include_news: includeNews }),
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            setIsLive(true);
+                            
+                            setNotification({
+                                message: `✅ Demo mode activated! ${result.message}`,
+                                type: 'success'
+                            });
+                            
+                            // Auto-refresh after 3 seconds
+                            setTimeout(() => {
+                                fetchAssessment();
+                                setAlertAnimating(false);
+                                setNotification(null);
+                            }, 3000);
+                        }
+                    } catch (error) {
+                        console.error('Error activating demo mode:', error);
+                        setAlertAnimating(false);
+                        setLoadingAnalysis(false);
+                        setNotification({
+                            message: '❌ Error activating demo mode. Please try again.',
+                            type: 'error'
+                        });
+                        setTimeout(() => setNotification(null), 3000);
                     }
                 };
 
@@ -239,269 +722,545 @@ async def get_frontend():
                     };
                 }, [autoRefresh, address]);
 
+                // Reset assessment when address changes
+                useEffect(() => {
+                    if (assessment && address.trim()) {
+                        // Clear current assessment to show that new data is needed
+                        setAssessment(null);
+                        setLoadingAnalysis(true);
+                        // Auto-clear loading state after a delay if no new assessment is fetched
+                        const timeout = setTimeout(() => {
+                            setLoadingAnalysis(false);
+                        }, 5000);
+                        return () => clearTimeout(timeout);
+                    }
+                }, [address]);
+
                 // Initial stats fetch
                 useEffect(() => {
                     fetchSystemStats();
                 }, []);
 
                 return (
-                    <div className="min-h-screen gradient-bg">
-                        <div className="container mx-auto px-4 py-8">
-                            {/* Header with Live Indicator */}
-                            <div className="text-center mb-8">
-                                <div className="flex items-center justify-center mb-4">
-                                    <h1 className="text-4xl font-bold text-white mr-4">
-                                        🏢 Live Insurance Risk & Quote Co-Pilot
-                                    </h1>
+                    <div className="min-h-screen fintech-bg">
+                        {/* Professional Notification Toast */}
+                        {notification && (
+                            <div className={`fixed top-6 right-6 z-50 p-6 rounded-2xl shadow-2xl transition-all duration-300 fintech-notification ${
+                                notification.type === 'success' ? 'border-l-4 border-green-500 bg-green-50' :
+                                notification.type === 'error' ? 'border-l-4 border-red-500 bg-red-50' :
+                                'border-l-4 border-blue-500 bg-blue-50'
+                            } fade-in`}>
+                                <div className="flex items-center">
+                                    <div className={`p-2 rounded-full mr-3 ${
+                                        notification.type === 'success' ? 'bg-green-100 text-green-600' :
+                                        notification.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                                    }`}>
+                                        <i className={`${
+                                            notification.type === 'success' ? 'fas fa-check' :
+                                            notification.type === 'error' ? 'fas fa-times' : 'fas fa-info'
+                                        } text-lg`}></i>
+                                    </div>
+                                    <span className="font-medium text-sm flex-1">{notification.message}</span>
+                                    <button 
+                                        onClick={() => setNotification(null)}
+                                        className="ml-4 text-2xl font-bold opacity-70 hover:opacity-100 transition-opacity duration-200"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="container mx-auto px-4 py-8 content-wrapper">
+                            {/* Professional Fintech Header */}
+                            <div className="fintech-header text-center">
+                                <div className="flex items-center justify-center mb-6">
+                                    <div className="bg-gradient-primary p-4 rounded-2xl mr-6 shadow-lg">
+                                        <i className="fas fa-shield-alt text-3xl text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h1 className="text-5xl font-bold brand-title mb-2">
+                                            InsureTech Pro
+                                        </h1>
+                                        <div className="brand-subtitle text-xl">
+                                            Risk Intelligence Platform
+                                        </div>
+                                    </div>
                                     {isLive && (
-                                        <div className="live-indicator bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                            <i className="fas fa-circle text-xs mr-1"></i>LIVE
+                                        <div className="live-indicator ml-6">
+                                            <i className="fas fa-circle text-xs mr-2"></i>LIVE
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-white opacity-90 text-lg">
-                                    Real-time risk assessment powered by live data streams and AI
+                                <p className="text-lg text-secondary mb-6 max-w-4xl mx-auto">
+                                    AI-powered risk assessment with real-time data analysis and comprehensive geographic intelligence. 
+                                    Transforming insurance decisions through advanced technology.
                                 </p>
                                 {systemStats && (
-                                    <div className="mt-4 flex justify-center space-x-6 text-white opacity-80 text-sm">
-                                        <span><i className="fas fa-database mr-1"></i>{systemStats.documents_indexed} documents</span>
-                                        <span><i className="fas fa-vector-square mr-1"></i>{systemStats.vector_store_size} embeddings</span>
-                                        <span><i className="fas fa-brain mr-1"></i>AI-Powered Analysis</span>
+                                    <div className="status-grid">
+                                        <div className="status-item">
+                                            <div className="status-value">
+                                                <i className="fas fa-database mr-2 text-primary-brand"></i>
+                                                {systemStats.documents_indexed}
+                                            </div>
+                                            <div className="status-label">Documents Indexed</div>
+                                        </div>
+                                        <div className="status-item">
+                                            <div className="status-value">
+                                                <i className="fas fa-vector-square mr-2 text-accent-purple"></i>
+                                                {systemStats.vector_store_size}
+                                            </div>
+                                            <div className="status-label">Vector Embeddings</div>
+                                        </div>
+                                        <div className="status-item">
+                                            <div className="status-value">
+                                                <i className="fas fa-brain mr-2 text-accent-emerald"></i>
+                                                AI
+                                            </div>
+                                            <div className="status-label">Powered Analysis</div>
+                                        </div>
+                                        <div className="status-item">
+                                            <div className="status-value">
+                                                <i className="fas fa-clock mr-2 text-accent-orange"></i>
+                                                24/7
+                                            </div>
+                                            <div className="status-label">Monitoring</div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
                             {/* Main Dashboard */}
                             <div className="grid lg:grid-cols-3 gap-6 mb-6">
-                                {/* Input Section */}
+                                {/* Professional Input Section */}
                                 <div className="lg:col-span-1">
-                                    <div className="glass-card rounded-lg card-shadow p-6">
-                                        <h2 className="text-xl font-semibold mb-4 flex items-center">
-                                            <i className="fas fa-map-marker-alt mr-2 text-blue-600"></i>
-                                            Property Assessment
-                                        </h2>
+                                    <div className="fintech-card p-8">
+                                        <div className="flex items-center mb-6">
+                                            <div className="bg-gradient-primary p-3 rounded-xl mr-4">
+                                                <i className="fas fa-search text-white text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-bold text-primary">Risk Assessment</h2>
+                                                <p className="text-secondary text-sm">Analyze property risk factors</p>
+                                            </div>
+                                        </div>
                                         
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Property Address
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="e.g., 25 Columbus Dr, Jersey City, NJ"
-                                                value={address}
-                                                onChange={(e) => setAddress(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Assessment Query
-                                            </label>
-                                            <textarea
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                rows="3"
-                                                value={query}
-                                                onChange={(e) => setQuery(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-4">
-                                            <label className="flex items-center">
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                    <i className="fas fa-map-marker-alt mr-2 text-primary-brand"></i>
+                                                    Property Address
+                                                </label>
                                                 <input
-                                                    type="checkbox"
-                                                    checked={autoRefresh}
-                                                    onChange={(e) => setAutoRefresh(e.target.checked)}
-                                                    className="mr-2 text-blue-600"
+                                                    type="text"
+                                                    className="fintech-input"
+                                                    placeholder="Enter full property address..."
+                                                    value={address}
+                                                    onChange={(e) => setAddress(e.target.value)}
                                                 />
-                                                <span className="text-sm text-gray-700">
-                                                    <i className="fas fa-sync-alt mr-1"></i>
-                                                    Auto-refresh every 30 seconds
-                                                </span>
-                                            </label>
-                                        </div>
+                                            </div>
 
-                                        <button
-                                            onClick={fetchAssessment}
-                                            disabled={loading || !address.trim()}
-                                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-md hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
-                                        >
-                                            {loading ? (
-                                                <span className="flex items-center justify-center">
-                                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    <i className="fas fa-brain mr-2"></i>
-                                                    Analyzing...
-                                                </span>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-search mr-2"></i>
-                                                    Get Live Assessment
-                                                </>
-                                            )}
-                                        </button>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                    <i className="fas fa-edit mr-2 text-primary-brand"></i>
+                                                    Assessment Query
+                                                </label>
+                                                <textarea
+                                                    className="fintech-input"
+                                                    rows="4"
+                                                    placeholder="Describe specific risk factors to analyze..."
+                                                    value={query}
+                                                    onChange={(e) => setQuery(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="info-panel rounded-xl p-4">
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={autoRefresh}
+                                                        onChange={(e) => setAutoRefresh(e.target.checked)}
+                                                        className="mr-3 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                                    />
+                                                    <div>
+                                                        <span className="text-sm font-semibold text-gray-700">
+                                                            <i className="fas fa-sync-alt mr-2 text-blue-600"></i>
+                                                            Auto-refresh data
+                                                        </span>
+                                                        <p className="text-xs text-muted mt-1">Update assessment every 30 seconds</p>
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                            <button
+                                                onClick={fetchAssessment}
+                                                disabled={loading || !address.trim()}
+                                                className="fintech-button w-full font-semibold text-base py-4"
+                                            >
+                                                {loading ? (
+                                                    <span className="flex items-center justify-center">
+                                                        <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        <i className="fas fa-brain mr-2"></i>
+                                                        Analyzing with AI...
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-search mr-3"></i>
+                                                        Generate Risk Assessment
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Risk Metrics */}
+                                {/* Professional Risk Metrics */}
                                 <div className="lg:col-span-2">
-                                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                    <div className="grid md:grid-cols-2 gap-6 mb-6">
                                         {/* Risk Score Card */}
-                                        <div className="glass-card rounded-lg card-shadow p-6 metric-card">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <h3 className="font-semibold text-gray-700">Risk Score</h3>
-                                                {assessment && (
-                                                    <span className="text-2xl">{getRiskIcon(assessment.risk_score)}</span>
-                                                )}
-                                            </div>
-                                            {assessment ? (
+                                        <div className={`fintech-card p-8 metric-card ${alertAnimating ? 'alert-pulse' : ''}`}>
+                                            <div className="flex items-center mb-6">
+                                                <div className="bg-gradient-primary p-3 rounded-xl mr-4">
+                                                    <i className="fas fa-chart-line text-white text-lg"></i>
+                                                </div>
                                                 <div>
-                                                    <div className={`text-3xl font-bold ${getRiskColor(assessment.risk_score)} mb-1`}>
-                                                        {assessment.risk_score}/10
+                                                    <h3 className="text-xl font-bold text-primary">Risk Score</h3>
+                                                    <p className="text-secondary text-sm">Comprehensive assessment</p>
+                                                </div>
+                                            </div>
+                                            {loading ? (
+                                                <div className="text-center py-8">
+                                                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mb-4"></div>
+                                                    <div className="space-y-2">
+                                                        <div className="loading-skeleton h-4 w-24 mx-auto rounded"></div>
+                                                        <div className="loading-skeleton h-3 w-16 mx-auto rounded"></div>
                                                     </div>
-                                                    <div className={`text-sm font-medium ${getRiskColor(assessment.risk_score)}`}>
+                                                </div>
+                                            ) : assessment ? (
+                                                <div className="fade-in text-center">
+                                                    <div className={`risk-score-circle mx-auto mb-4 ${
+                                                        assessment.risk_score <= 2 ? 'bg-gradient-success' :
+                                                        assessment.risk_score <= 4 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                                                        assessment.risk_score <= 7 ? 'bg-gradient-warm' : 'bg-gradient-to-r from-red-500 to-red-600'
+                                                    }`}>
+                                                        <div className="risk-score-inner">
+                                                            <div className={`text-3xl font-black ${getRiskColor(assessment.risk_score)}`}>
+                                                                {assessment.risk_score}
+                                                            </div>
+                                                            <div className="text-sm text-gray-600 font-medium">/ 10</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`text-lg font-bold ${getRiskColor(assessment.risk_score)} mb-2`}>
                                                         {getRiskLabel(assessment.risk_score)}
                                                     </div>
-                                                    {/* Risk Bar */}
-                                                    <div className="mt-3 bg-gray-200 rounded-full h-2">
+                                                    {/* Enhanced Risk Bar */}
+                                                    <div className="progress-container">
                                                         <div 
-                                                            className={`h-2 rounded-full transition-all duration-500 ${
-                                                                assessment.risk_score <= 2 ? 'bg-green-500' :
-                                                                assessment.risk_score <= 4 ? 'bg-yellow-500' :
-                                                                assessment.risk_score <= 7 ? 'bg-orange-500' : 'bg-red-500'
+                                                            className={`progress-fill ${
+                                                                assessment.risk_score <= 2 ? 'bg-gradient-success' :
+                                                                assessment.risk_score <= 4 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                                                                assessment.risk_score <= 7 ? 'bg-gradient-warm' : 'bg-gradient-to-r from-red-500 to-red-600'
                                                             }`}
                                                             style={{width: `${(assessment.risk_score / 10) * 100}%`}}
                                                         ></div>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="text-gray-400 text-center py-4">
-                                                    <i className="fas fa-chart-line text-3xl mb-2"></i>
-                                                    <p>No assessment yet</p>
+                                                <div className="text-center py-8">
+                                                    <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                                                        <i className="fas fa-chart-line text-3xl text-gray-400"></i>
+                                                    </div>
+                                                    <p className="font-semibold text-gray-600">No assessment available</p>
+                                                    <p className="text-sm text-muted">Enter an address to begin analysis</p>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Insurance Quote Card */}
-                                        <div className="glass-card rounded-lg card-shadow p-6 metric-card">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <h3 className="font-semibold text-gray-700">Monthly Premium</h3>
-                                                <i className="fas fa-dollar-sign text-green-600 text-xl"></i>
-                                            </div>
-                                            {assessment ? (
+                                        <div className={`fintech-card p-8 metric-card ${alertAnimating ? 'alert-pulse' : ''}`}>
+                                            <div className="flex items-center mb-6">
+                                                <div className="bg-gradient-success p-3 rounded-xl mr-4">
+                                                    <i className="fas fa-dollar-sign text-white text-lg"></i>
+                                                </div>
                                                 <div>
-                                                    <div className="text-3xl font-bold text-green-600 mb-1">
+                                                    <h3 className="text-xl font-bold text-primary">Monthly Premium</h3>
+                                                    <p className="text-secondary text-sm">Estimated insurance cost</p>
+                                                </div>
+                                            </div>
+                                            {loading ? (
+                                                <div className="text-center py-8">
+                                                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mb-4"></div>
+                                                    <div className="space-y-2">
+                                                        <div className="loading-skeleton h-4 w-28 mx-auto rounded"></div>
+                                                        <div className="loading-skeleton h-3 w-20 mx-auto rounded"></div>
+                                                    </div>
+                                                </div>
+                                            ) : assessment ? (
+                                                <div className="fade-in text-center">
+                                                    <div className="text-4xl font-black text-brand mb-2">
                                                         ${assessment.insurance_quote}
                                                     </div>
-                                                    <div className="text-sm text-gray-600">
-                                                        For $1M coverage
+                                                    <div className="text-secondary mb-4">
+                                                        <span className="font-medium">For $1M coverage per month</span>
                                                     </div>
-                                                    <div className="text-xs text-gray-500 mt-2">
-                                                        Base: $500 + Risk Premium
+                                                    <div className="info-panel rounded-xl p-4">
+                                                        <div className="text-sm text-gray-700">
+                                                            <div className="flex justify-between mb-2">
+                                                                <span>Base Premium:</span>
+                                                                <span className="font-semibold">$500</span>
+                                                            </div>
+                                                            <div className="flex justify-between">
+                                                                <span>Risk Adjustment:</span>
+                                                                <span className={`font-semibold ${(assessment.insurance_quote - 500) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                    {(assessment.insurance_quote - 500) > 0 ? '+' : ''}${assessment.insurance_quote - 500}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="text-gray-400 text-center py-4">
-                                                    <i className="fas fa-calculator text-3xl mb-2"></i>
-                                                    <p>Enter address to calculate</p>
+                                                <div className="text-center py-8">
+                                                    <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                                                        <i className="fas fa-calculator text-3xl text-gray-400"></i>
+                                                    </div>
+                                                    <p className="font-semibold text-gray-600">Quote unavailable</p>
+                                                    <p className="text-sm text-muted">Complete assessment to calculate</p>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Risk Summary */}
-                                    <div className="glass-card rounded-lg card-shadow p-6">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3 className="font-semibold text-gray-700 flex items-center">
-                                                <i className="fas fa-file-alt mr-2"></i>
-                                                Risk Analysis
-                                            </h3>
-                                            {lastUpdate && (
-                                                <span className="text-sm text-gray-500 flex items-center">
-                                                    <i className="fas fa-clock mr-1"></i>
-                                                    Updated: {lastUpdate}
-                                                </span>
+                                    {/* Risk Analysis Summary */}
+                                    <div className={`fintech-card p-8 ${alertAnimating ? 'alert-pulse' : ''}`}>
+                                        <div className="flex justify-between items-center mb-6">
+                                            <div className="flex items-center">
+                                                <div className="bg-gradient-purple p-3 rounded-xl mr-4">
+                                                    <i className="fas fa-chart-bar text-white text-lg"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-primary">Risk Analysis Report</h3>
+                                                    <p className="text-secondary text-sm">AI-powered comprehensive assessment</p>
+                                                </div>
+                                            </div>
+                                            {lastUpdate && !loadingAnalysis && (
+                                                <div className="text-right">
+                                                    <div className="text-sm text-gray-600 flex items-center justify-end font-medium">
+                                                        <i className="fas fa-clock mr-2 text-blue-600"></i>
+                                                        Updated: {lastUpdate}
+                                                    </div>
+                                                    <div className="text-xs font-semibold mt-1 text-green-600">
+                                                        <i className="fas fa-check-circle mr-1"></i>
+                                                        Real-time data
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
 
-                                        {assessment ? (
-                                            <div>
-                                                <div className="text-sm text-gray-700 whitespace-pre-line mb-4">
-                                                    {assessment.risk_summary}
+                                        {loadingAnalysis ? (
+                                            <div className="space-y-6">
+                                                <div className="flex items-center justify-center py-8">
+                                                    <div className="relative">
+                                                        <div className="animate-spin rounded-full h-20 w-20 border-4 border-gray-200"></div>
+                                                        <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <i className="fas fa-brain text-blue-600 text-xl"></i>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
-                                                    <span>
-                                                        <i className="fas fa-database mr-1"></i>
-                                                        Based on {assessment.relevant_documents} data points
-                                                    </span>
-                                                    <span>
-                                                        <i className="fas fa-clock mr-1"></i>
-                                                        {new Date(assessment.timestamp).toLocaleString()}
-                                                    </span>
+                                                <div className="text-center">
+                                                    <div className="text-lg font-semibold text-blue-600 mb-2">
+                                                        AI analyzing risk factors...
+                                                    </div>
+                                                    <div className="text-sm text-secondary mb-6">
+                                                        Processing live data streams and geographic information
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <div className="loading-skeleton h-4 w-full rounded"></div>
+                                                    <div className="loading-skeleton h-4 w-5/6 rounded"></div>
+                                                    <div className="loading-skeleton h-4 w-4/5 rounded"></div>
+                                                    <div className="loading-skeleton h-4 w-full rounded"></div>
+                                                    <div className="loading-skeleton h-4 w-3/4 rounded"></div>
+                                                </div>
+                                            </div>
+                                        ) : assessment ? (
+                                            <div className="fade-in">
+                                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-6 border-l-4 border-blue-500">
+                                                    <div 
+                                                        className="text-gray-800 leading-relaxed whitespace-pre-wrap"
+                                                        style={{
+                                                            maxHeight: 'none',
+                                                            overflow: 'visible',
+                                                            wordWrap: 'break-word',
+                                                            lineHeight: '1.7',
+                                                            fontSize: '0.95rem'
+                                                        }}
+                                                    >
+                                                        {assessment.risk_summary}
+                                                    </div>
+                                                </div>
+                                                <div className="grid md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                                                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                                                        <div className="text-blue-600 font-bold text-lg">{assessment.relevant_documents}</div>
+                                                        <div className="text-xs text-blue-700 font-medium">Data Points</div>
+                                                    </div>
+                                                    <div className="text-center p-4 bg-orange-50 rounded-xl">
+                                                        <div className="text-orange-600 font-bold text-lg">
+                                                            {new Date(assessment.timestamp).toLocaleDateString()}
+                                                        </div>
+                                                        <div className="text-xs text-orange-700 font-medium">Assessment Date</div>
+                                                    </div>
+                                                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                                                        <div className="text-purple-600 font-bold text-lg">AI-Powered</div>
+                                                        <div className="text-xs text-purple-700 font-medium">Analysis Type</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center py-8 text-gray-500">
-                                                <i className="fas fa-search text-4xl mb-4 opacity-50"></i>
-                                                <p className="text-lg">Enter a property address and click "Get Live Assessment"</p>
-                                                <p>to see AI-powered risk analysis with real-time data</p>
+                                            <div className="text-center py-16 text-gray-500">
+                                                <div className="bg-gray-100 rounded-full p-8 w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                                                    <i className="fas fa-search text-5xl text-gray-400"></i>
+                                                </div>
+                                                <h4 className="text-xl font-semibold mb-2">Ready for Analysis</h4>
+                                                <p className="text-lg mb-2">Enter a property address and click "Generate Risk Assessment"</p>
+                                                <p className="text-sm">to see AI-powered risk analysis with real-time data</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Demo Controls */}
-                            <div className="glass-card rounded-lg card-shadow p-6">
-                                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                                    <i className="fas fa-flask mr-2 text-purple-600"></i>
-                                    Demo Controls & Test Scenarios
-                                </h2>
-                                <p className="text-gray-600 mb-6">
-                                    Inject test alerts to see how the system responds to real-time events and updates risk assessments instantly:
-                                </p>
+                            {/* Professional Demo Controls */}
+                            <div className="fintech-card p-8">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center">
+                                        <div className="bg-gradient-purple p-4 rounded-xl mr-4">
+                                            <i className="fas fa-flask text-white text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-primary">Demo Controls & Test Scenarios</h2>
+                                            <p className="text-secondary mt-1">Simulate real-world events and observe risk assessment updates</p>
+                                        </div>
+                                    </div>
+                                    {(alertAnimating || isLive) && (
+                                        <div className="live-indicator">
+                                            <i className="fas fa-satellite-dish text-xs mr-2"></i>PROCESSING
+                                        </div>
+                                    )}
+                                </div>
                                 
-                                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div className="info-panel info-panel-success rounded-2xl p-6 mb-8">
+                                    <div className="flex items-start">
+                                        <div className="bg-blue-100 p-2 rounded-lg mr-4 mt-1">
+                                            <i className="fas fa-info-circle text-blue-600 text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-lg mb-2 text-gray-800">How Demo Mode Works</h4>
+                                            <p className="text-gray-700 leading-relaxed">
+                                                Test alerts are injected into the live data feed and processed by the Pathway streaming engine. 
+                                                The AI analyzes the new data and updates the risk score and insurance quote in real-time, 
+                                                demonstrating how the system responds to actual emergency situations.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <button
                                         onClick={() => injectTestAlert('fire')}
-                                        className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3 rounded-md hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg"
+                                        disabled={alertAnimating}
+                                        className={`demo-button bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 ${
+                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                     >
-                                        <i className="fas fa-fire mr-2"></i>
-                                        Fire Alert
+                                        {alertAnimating ? (
+                                            <span className="flex items-center justify-center">
+                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Processing...
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-fire text-2xl mb-2"></i>
+                                                <div className="font-bold">Fire Alert</div>
+                                                <div className="text-xs opacity-90">Emergency Response</div>
+                                            </>
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => injectTestAlert('flood')}
-                                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-md hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                                        disabled={alertAnimating}
+                                        className={`demo-button bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 ${
+                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                     >
-                                        <i className="fas fa-water mr-2"></i>
-                                        Flood Alert
+                                        {alertAnimating ? (
+                                            <span className="flex items-center justify-center">
+                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Processing...
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-water text-2xl mb-2"></i>
+                                                <div className="font-bold">Flood Alert</div>
+                                                <div className="text-xs opacity-90">Weather Emergency</div>
+                                            </>
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => injectTestAlert('crime')}
-                                        className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-3 rounded-md hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 font-semibold shadow-lg"
+                                        disabled={alertAnimating}
+                                        className={`demo-button bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 ${
+                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                     >
-                                        <i className="fas fa-exclamation-triangle mr-2"></i>
-                                        Crime Alert
+                                        {alertAnimating ? (
+                                            <span className="flex items-center justify-center">
+                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Processing...
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                                                <div className="font-bold">Crime Alert</div>
+                                                <div className="text-xs opacity-90">Security Incident</div>
+                                            </>
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => injectTestAlert('earthquake')}
-                                        className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 rounded-md hover:from-purple-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg"
+                                        disabled={alertAnimating}
+                                        className={`demo-button bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 ${
+                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                     >
-                                        <i className="fas fa-mountain mr-2"></i>
-                                        Earthquake Alert
+                                        {alertAnimating ? (
+                                            <span className="flex items-center justify-center">
+                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Processing...
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-mountain text-2xl mb-2"></i>
+                                                <div className="font-bold">Earthquake Alert</div>
+                                                <div className="text-xs opacity-90">Seismic Activity</div>
+                                            </>
+                                        )}
                                     </button>
-                                </div>
-                                
-                                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                    <div className="flex items-start">
-                                        <i className="fas fa-info-circle text-blue-500 mr-2 mt-1"></i>
-                                        <div className="text-sm text-blue-700">
-                                            <strong>How it works:</strong> Test alerts are injected into the live data feed and processed by the Pathway streaming engine. 
-                                            The AI will analyze the new data and update the risk score and insurance quote in real-time.
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -552,14 +1311,46 @@ async def inject_test_alert(request: TestAlertRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Alert injection error: {str(e)}")
 
+@app.post("/activate_demo_mode")
+async def activate_demo_mode(request: DemoModeRequest):
+    """Activate full demo mode with simulated news and test alerts"""
+    try:
+        if not data_fetcher:
+            raise HTTPException(status_code=500, detail="Data fetcher not initialized")
+        
+        # Inject demo news if requested
+        if request.include_news:
+            data_fetcher.inject_demo_news_alerts(request.address)
+        
+        # Inject a random test alert
+        import random
+        alert_types = ['fire', 'flood', 'crime', 'earthquake', 'traffic']
+        random_alert = random.choice(alert_types)
+        data_fetcher.inject_test_alert(request.address, random_alert)
+        
+        return {
+            "success": True,
+            "message": f"Demo mode activated for {request.address} with news and {random_alert} alert",
+            "alert_type": random_alert,
+            "news_included": request.include_news
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Demo mode activation error: {str(e)}")
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    data_stats = data_manager.get_system_stats() if data_manager else {}
+    
     return {
         "status": "healthy",
         "rag_pipeline": rag_pipeline is not None,
         "data_fetcher": data_fetcher is not None,
-        "documents_indexed": len(rag_pipeline.documents) if rag_pipeline else 0
+        "data_manager": data_manager is not None,
+        "documents_indexed": len(rag_pipeline.documents) if rag_pipeline else 0,
+        "active_files": data_stats.get('active_files', 0),
+        "data_management_active": data_stats.get('management_active', False)
     }
 
 @app.get("/stats")
@@ -568,15 +1359,49 @@ async def get_stats():
     if not rag_pipeline:
         raise HTTPException(status_code=500, detail="RAG pipeline not initialized")
     
+    # Get data management stats
+    data_stats = data_manager.get_system_stats() if data_manager else {}
+    
     return {
         "documents_indexed": len(rag_pipeline.documents),
         "vector_store_size": len(rag_pipeline.embeddings),
         "data_directory": rag_pipeline.data_dir,
         "model_info": {
             "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-            "llm_model": rag_pipeline.model_name
-        }
+            "llm_model": rag_pipeline.model_name,
+            "api_client_active": rag_pipeline.openai_client is not None
+        },
+        "data_management": data_stats
     }
+
+@app.get("/data/recent")
+async def get_recent_data():
+    """Get recent data summary"""
+    if not data_manager:
+        raise HTTPException(status_code=500, detail="Data manager not initialized")
+    
+    return data_manager.get_recent_data_summary(hours=2)
+
+@app.post("/data/cleanup")
+async def force_data_cleanup():
+    """Force immediate data cleanup"""
+    if not data_manager:
+        raise HTTPException(status_code=500, detail="Data manager not initialized")
+    
+    result = data_manager.force_cleanup()
+    return {
+        "success": True,
+        "message": "Data cleanup completed",
+        "details": result
+    }
+
+@app.get("/data/stats")
+async def get_data_stats():
+    """Get detailed data management statistics"""
+    if not data_manager:
+        raise HTTPException(status_code=500, detail="Data manager not initialized")
+    
+    return data_manager.get_system_stats()
 
 if __name__ == "__main__":
     import uvicorn

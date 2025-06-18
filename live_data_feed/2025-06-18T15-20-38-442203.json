@@ -1,0 +1,8 @@
+{
+  "source": "simulated_traffic",
+  "timestamp": "2025-06-18T15:20:38.442164",
+  "location": "40.7128,-74.006",
+  "content": "Traffic incident: Road construction causing delays. Emergency services responding.",
+  "type": "traffic",
+  "severity": "low"
+}

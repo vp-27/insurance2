@@ -1,0 +1,9 @@
+{
+  "source": "nyc_open_data",
+  "timestamp": "2025-06-18T15:19:42.337676",
+  "location": "40.7128,-74.006",
+  "content": "NYPD report: PETIT LARCENY in MANHATTAN",
+  "type": "crime",
+  "severity": "low",
+  "crime_type": "PETIT LARCENY"
+}

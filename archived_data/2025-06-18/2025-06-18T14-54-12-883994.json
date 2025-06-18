@@ -1,0 +1,9 @@
+{
+  "source": "demo_news",
+  "timestamp": "2025-06-18T14:54:12.883974",
+  "location": "Demo Test Location",
+  "content": "DEMO: Construction accident blocks major intersection, emergency services on scene.",
+  "type": "news",
+  "severity": "medium",
+  "is_demo": true
+}
