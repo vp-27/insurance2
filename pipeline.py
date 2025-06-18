@@ -9,13 +9,17 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 from location_analyzer import LocationAnalyzer
 from openai import OpenAI
+from dotenv import load_dotenv
 
 class LiveRAGPipeline:
     def __init__(self, data_dir: str = "./live_data_feed"):
+        # Force reload environment variables
+        load_dotenv(override=True)
+        
         self.data_dir = data_dir
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
         self.openrouter_base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        self.model_name = os.getenv("MODEL_NAME", "google/gemma-3-4b-it:free")
+        self.model_name = os.getenv("MODEL_NAME", "google/gemma-3n-e4b-it:free")
         self.base_cost = float(os.getenv("BASE_INSURANCE_COST", "500"))
         self.risk_multiplier = float(os.getenv("RISK_MULTIPLIER", "0.1"))
         
@@ -188,8 +192,8 @@ class LiveRAGPipeline:
         """Call LLM via OpenRouter API using OpenAI client"""
         try:
             if not self.openai_client:
-                # Return a simulated response if no API key
-                return self.simulate_llm_response(prompt)
+                # Return error message if no API key
+                return f"❌ **API Configuration Error**: OpenRouter API key not found or invalid.\n\nPlease check your .env file and ensure OPENROUTER_API_KEY is properly set.\n\nCurrent status: No valid API client initialized."
             
             completion = self.openai_client.chat.completions.create(
                 extra_headers={
@@ -207,8 +211,11 @@ class LiveRAGPipeline:
             return completion.choices[0].message.content
             
         except Exception as e:
+            error_msg = str(e)
             print(f"LLM API error: {e}")
-            return self.simulate_llm_response(prompt)
+            
+            # Return specific error message instead of simulation
+            return f"❌ **OpenRouter API Error**: {error_msg}\n\nThis is a real API error, not a simulation. Please check:\n- API key validity\n- Model availability ({self.model_name})\n- Network connectivity\n- OpenRouter service status"
     
     def simulate_llm_response(self, prompt: str) -> str:
         """Simulate LLM response when API is not available"""
@@ -476,6 +483,11 @@ Factor in location-specific risks in your assessment."""
     
     def extract_risk_score_enhanced(self, llm_response: str, location_factors: Dict[str, Any]) -> int:
         """Enhanced risk score extraction with location consideration"""
+        # Check if this is an error message
+        if "❌" in llm_response or "Error" in llm_response or "API Error" in llm_response:
+            # Return base location risk for errors, not a default high score
+            return max(1, int(location_factors.get('base_risk_score', 3)))
+        
         # Try to extract from LLM response first
         base_score = self.extract_risk_score(llm_response)
         
