@@ -1,0 +1,7 @@
+{
+  "source": "test",
+  "timestamp": "2025-06-18T12:00:00Z",
+  "location": "Test Location",
+  "content": "Test alert for system verification",
+  "type": "test"
+}
