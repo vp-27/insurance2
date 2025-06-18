@@ -1,0 +1,22 @@
+{
+  "source": "newsdata_io",
+  "timestamp": "2025-06-18T13:51:57.775885",
+  "location": "New York",
+  "content": "While North Korea denied Covid-19 cases, the virus was widespread and barely treated, report says: None",
+  "type": "news",
+  "url": "https://www.cnn.com/2025/06/18/asia/north-korea-covid-report-intl-hnk",
+  "category": [
+    "top",
+    "sports",
+    "technology",
+    "business",
+    "science",
+    "entertainment",
+    "health",
+    "world",
+    "politics",
+    "environment",
+    "tourism",
+    "education"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "source": "nyc_open_data",
+  "timestamp": "2025-06-18T14:13:23.205721",
+  "location": "40.7128,-74.006",
+  "content": "NYPD report: HARRASSMENT 2 in MANHATTAN",
+  "type": "crime",
+  "severity": "low",
+  "crime_type": "HARRASSMENT 2"
+}
