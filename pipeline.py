@@ -7,6 +7,7 @@ from datetime import datetime
 import requests
 from sentence_transformers import SentenceTransformer
 import numpy as np
+from location_analyzer import LocationAnalyzer
 
 class LiveRAGPipeline:
     def __init__(self, data_dir: str = "./live_data_feed"):
@@ -16,6 +17,9 @@ class LiveRAGPipeline:
         self.model_name = os.getenv("MODEL_NAME", "mistralai/mixtral-8x7b-instruct")
         self.base_cost = float(os.getenv("BASE_INSURANCE_COST", "500"))
         self.risk_multiplier = float(os.getenv("RISK_MULTIPLIER", "0.1"))
+        
+        # Initialize location analyzer
+        self.location_analyzer = LocationAnalyzer()
         
         # Initialize embedding model
         self.embedding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
@@ -363,7 +367,11 @@ class LiveRAGPipeline:
 **Status:** All systems normal, continue standard monitoring protocols."""
     
     async def query_rag(self, address: str, query: str) -> Dict[str, Any]:
-        """Main RAG query function"""
+        """Main RAG query function with location-specific analysis"""
+        
+        # Get location-specific risk factors
+        location_factors = self.location_analyzer.analyze_location_risk_factors(address)
+        
         # Search for relevant documents
         search_query = f"{address} {query}"
         relevant_docs = self.similarity_search(search_query, top_k=5)
@@ -375,25 +383,45 @@ class LiveRAGPipeline:
         
         context = "\n---\n".join(context_parts) if context_parts else "No relevant incidents found in recent data."
         
-        # Build prompt
-        prompt = f"""You are an AI Insurance Underwriting Assistant. Using only the live context below:
+        # Build enhanced prompt with location context
+        location_context = self.build_location_context(location_factors)
+        
+        prompt = f"""You are an AI Insurance Underwriting Assistant. Analyze the location and recent incidents:
 
-1. Summarize any current risks at {address}
-2. Assign a risk score from 1 (safe) to 10 (critical)
-3. Estimate a monthly insurance quote for $1M coverage, using:
-   base = ${self.base_cost}, quote = base × (1 + {self.risk_multiplier} × risk_score)
+PROPERTY: {address}
+LOCATION ANALYSIS:
+{location_context}
 
-Context:
+RECENT INCIDENTS:
 ---
 {context}
 ---
 
-Provide a structured response with clear risk summary, numerical risk score, and calculated insurance quote."""
+Provide:
+1. Risk summary considering both location factors and recent incidents
+2. Risk score from 1 (safe) to 10 (critical)
+3. Monthly insurance quote for $1M coverage
+
+Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score)
+Factor in location-specific risks in your assessment."""
         
         # Get LLM response
         llm_response = await self.call_llm(prompt)
         
-        # Extract risk score from response (simple parsing)
+        # Extract risk score from response with location consideration
+        risk_score = self.extract_risk_score_enhanced(llm_response, location_factors)
+        
+        # Calculate quote with location factors
+        quote = self.calculate_enhanced_quote(risk_score, location_factors)
+        
+        return {
+            'risk_summary': llm_response,
+            'risk_score': risk_score,
+            'insurance_quote': round(quote, 2),
+            'relevant_documents': len(relevant_docs),
+            'location_factors': location_factors,
+            'timestamp': datetime.now().isoformat()
+        }
         risk_score = self.extract_risk_score(llm_response)
         
         # Calculate quote
@@ -427,6 +455,52 @@ Provide a structured response with clear risk summary, numerical risk score, and
         
         # Default to moderate risk if no score found
         return 5
+    
+    def build_location_context(self, location_factors: Dict[str, Any]) -> str:
+        """Build location context string for LLM prompt"""
+        context_parts = []
+        
+        if location_factors['latitude'] and location_factors['longitude']:
+            context_parts.append(f"Coordinates: {location_factors['latitude']:.2f}, {location_factors['longitude']:.2f}")
+        
+        context_parts.append(f"Area Type: {location_factors['location_description']}")
+        context_parts.append(f"Base Risk Level: {location_factors['base_risk_score']:.1f}/10")
+        
+        if location_factors['primary_risks']:
+            context_parts.append(f"Primary Regional Risks: {', '.join(location_factors['primary_risks'])}")
+        
+        if location_factors['risk_multipliers']:
+            multiplier_info = []
+            for risk_type, multiplier in location_factors['risk_multipliers'].items():
+                multiplier_info.append(f"{risk_type} ({multiplier:.1f}x)")
+            context_parts.append(f"Risk Multipliers: {', '.join(multiplier_info)}")
+        
+        return "\n".join(context_parts)
+    
+    def extract_risk_score_enhanced(self, llm_response: str, location_factors: Dict[str, Any]) -> int:
+        """Enhanced risk score extraction with location consideration"""
+        # Try to extract from LLM response first
+        base_score = self.extract_risk_score(llm_response)
+        
+        # If using default score, consider location factors
+        if base_score == 5:  # Default fallback score
+            base_score = max(2, location_factors['base_risk_score'])
+        
+        # Ensure score is within bounds
+        return max(1, min(10, int(base_score)))
+    
+    def calculate_enhanced_quote(self, risk_score: int, location_factors: Dict[str, Any]) -> float:
+        """Calculate quote with location-specific adjustments"""
+        base_quote = self.base_cost * (1 + self.risk_multiplier * risk_score)
+        
+        # Apply location-specific multipliers (dampened to avoid extreme quotes)
+        total_multiplier = 1.0
+        for risk_type, multiplier in location_factors.get('risk_multipliers', {}).items():
+            # Apply a dampened version of the multiplier to avoid extreme quotes
+            dampened_multiplier = 1 + (multiplier - 1) * 0.25  # 25% of the full multiplier effect
+            total_multiplier *= dampened_multiplier
+        
+        return base_quote * total_multiplier
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
