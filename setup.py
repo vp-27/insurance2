@@ -126,7 +126,7 @@ NEWS_API_KEY=your_newsdata_io_api_key_here
 
 # OpenRouter Configuration
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-MODEL_NAME=mistralai/mixtral-8x7b-instruct
+MODEL_NAME=google/gemma-3-4b-it:free
 
 # Application Configuration
 REFRESH_INTERVAL=30

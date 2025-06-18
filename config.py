@@ -14,7 +14,7 @@ class Config:
     NEWS_API_KEY = os.getenv("NEWS_API_KEY", "your_newsdata_io_api_key_here")
     
     # Model Configuration
-    LLM_MODEL = os.getenv("MODEL_NAME", "mistralai/mixtral-8x7b-instruct")
+    LLM_MODEL = os.getenv("MODEL_NAME", "google/gemma-3-4b-it:free")
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     
     # Application Settings

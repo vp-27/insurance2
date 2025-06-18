@@ -8,18 +8,25 @@ import requests
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from location_analyzer import LocationAnalyzer
+from openai import OpenAI
 
 class LiveRAGPipeline:
     def __init__(self, data_dir: str = "./live_data_feed"):
         self.data_dir = data_dir
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
         self.openrouter_base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        self.model_name = os.getenv("MODEL_NAME", "mistralai/mixtral-8x7b-instruct")
+        self.model_name = os.getenv("MODEL_NAME", "google/gemma-3-4b-it:free")
         self.base_cost = float(os.getenv("BASE_INSURANCE_COST", "500"))
         self.risk_multiplier = float(os.getenv("RISK_MULTIPLIER", "0.1"))
         
         # Initialize location analyzer
         self.location_analyzer = LocationAnalyzer()
+        
+        # Initialize OpenAI client for OpenRouter
+        self.openai_client = OpenAI(
+            base_url=self.openrouter_base_url,
+            api_key=self.openrouter_api_key
+        ) if self.openrouter_api_key and self.openrouter_api_key != "your_openrouter_api_key_here" else None
         
         # Initialize embedding model
         self.embedding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
@@ -178,36 +185,26 @@ class LiveRAGPipeline:
                 time.sleep(10)
     
     async def call_llm(self, prompt: str) -> str:
-        """Call LLM via OpenRouter API"""
+        """Call LLM via OpenRouter API using OpenAI client"""
         try:
-            if not self.openrouter_api_key or self.openrouter_api_key == "your_openrouter_api_key_here":
+            if not self.openai_client:
                 # Return a simulated response if no API key
                 return self.simulate_llm_response(prompt)
             
-            headers = {
-                "Authorization": f"Bearer {self.openrouter_api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "model": self.model_name,
-                "messages": [
+            completion = self.openai_client.chat.completions.create(
+                extra_headers={
+                    "HTTP-Referer": "https://your-site.com",  # Optional. Site URL for rankings
+                    "X-Title": "Insurance Risk Analysis",     # Optional. Site title for rankings
+                },
+                model=self.model_name,
+                messages=[
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": 0.7,
-                "max_tokens": 500
-            }
-            
-            response = requests.post(
-                f"{self.openrouter_base_url}/chat/completions",
-                headers=headers,
-                json=data,
-                timeout=30
+                temperature=0.7,
+                max_tokens=500
             )
-            response.raise_for_status()
             
-            result = response.json()
-            return result['choices'][0]['message']['content']
+            return completion.choices[0].message.content
             
         except Exception as e:
             print(f"LLM API error: {e}")
