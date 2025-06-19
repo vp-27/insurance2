@@ -2,12 +2,29 @@ try:
     import pathway as pw
 except ImportError:
     # Mock pathway for development
+    class MockSchema:
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+    
     class MockPathway:
         def __init__(self):
-            pass
+            self.Schema = MockSchema
+            self.io = MockIO()
+        
         def run(self):
             print("Mock Pathway pipeline running...")
             return "Mock pipeline completed"
+    
+    class MockIO:
+        def __init__(self):
+            self.fs = MockFS()
+    
+    class MockFS:
+        def read(self, path, format, schema, mode):
+            print(f"Mock Pathway: Would monitor {path} for {format} files")
+            return None
+    
     pw = MockPathway()
 
 import asyncio
@@ -160,6 +177,10 @@ class LiveRAGPipeline:
         if not self.embeddings:
             return []
         
+        # If numpy is not available, do simple keyword matching
+        if not np:
+            return self.keyword_search(query, top_k)
+        
         query_embedding = self.embed_text(query)
         embeddings_array = np.array(self.embeddings)
         
@@ -181,6 +202,26 @@ class LiveRAGPipeline:
                 })
         
         return results
+    
+    def keyword_search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+        """Fallback keyword-based search when numpy is not available"""
+        query_words = set(query.lower().split())
+        results = []
+        
+        for i, (doc, metadata) in enumerate(zip(self.documents, self.document_metadata)):
+            doc_words = set(doc.lower().split())
+            # Simple word overlap score
+            overlap = len(query_words.intersection(doc_words))
+            if overlap > 0:
+                results.append({
+                    'content': doc,
+                    'metadata': metadata,
+                    'similarity': overlap / len(query_words)  # Normalized overlap
+                })
+        
+        # Sort by similarity and return top-k
+        results.sort(key=lambda x: x['similarity'], reverse=True)
+        return results[:top_k]
     
     def load_existing_data(self):
         """Load existing data from the data directory"""
