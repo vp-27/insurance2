@@ -16,8 +16,17 @@ import os
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import requests
-from sentence_transformers import SentenceTransformer
-import numpy as np
+
+# Handle optional ML dependencies
+try:
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    HAS_ML_DEPS = True
+except ImportError:
+    print("Warning: ML dependencies not available. Some features will be limited.")
+    SentenceTransformer = None
+    np = None
+    HAS_ML_DEPS = False
 from location_analyzer import LocationAnalyzer
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -55,7 +64,11 @@ class LiveRAGPipeline:
             print("⚠️ OpenRouter API key not found or invalid - using simulation mode")
         
         # Initialize embedding model
-        self.embedding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        if HAS_ML_DEPS and SentenceTransformer:
+            self.embedding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        else:
+            self.embedding_model = None
+            print("Warning: Embedding model not available. Vector search disabled.")
         
         # Store for vector index
         self.documents = []
@@ -124,9 +137,13 @@ class LiveRAGPipeline:
         self.input_table = None
         self.processed_table = None
     
-    def embed_text(self, text: str) -> np.ndarray:
+    def embed_text(self, text: str) -> Any:
         """Generate embeddings for text"""
-        return self.embedding_model.encode(text)
+        if self.embedding_model:
+            return self.embedding_model.encode(text)
+        else:
+            # Return a simple hash-based representation as fallback
+            return [hash(text) % 1000 for _ in range(384)]  # Mock 384-dim vector
     
     def add_document(self, doc_data: Dict[str, Any]):
         """Add a document to the vector store"""

@@ -1,0 +1,9 @@
+{
+  "source": "demo_news",
+  "timestamp": "2025-06-18T20:13:55.082077",
+  "location": "11 Blanche Street Secaucus NJ",
+  "content": "DEMO: Heavy rainfall causes minor flooding in downtown area. City crews monitoring situation.",
+  "type": "news",
+  "severity": "low",
+  "is_demo": true
+}
