@@ -25,7 +25,6 @@ numpy>=1.26.0
 openai>=1.3.0
 
 # Comment out heavy ML dependencies that cause conflicts
-# openai==1.3.7
 # sentence-transformers==2.2.2
 # torch>=2.0.0
 # transformers>=4.30.0
