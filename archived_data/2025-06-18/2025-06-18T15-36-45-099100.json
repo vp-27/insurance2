@@ -1,0 +1,9 @@
+{
+  "source": "demo_news",
+  "timestamp": "2025-06-18T15:36:45.099048",
+  "location": "25 Columbus Dr, Jersey City, NJ",
+  "content": "DEMO: Construction accident blocks major intersection, emergency services on scene.",
+  "type": "news",
+  "severity": "medium",
+  "is_demo": true
+}

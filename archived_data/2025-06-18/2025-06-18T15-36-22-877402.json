@@ -1,0 +1,8 @@
+{
+  "source": "simulated_traffic",
+  "timestamp": "2025-06-18T15:36:22.877343",
+  "location": "40.7128,-74.006",
+  "content": "Traffic incident: Power lines down across street. Emergency services responding.",
+  "type": "traffic",
+  "severity": "high"
+}

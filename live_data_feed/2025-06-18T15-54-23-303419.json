@@ -1,0 +1,9 @@
+{
+  "source": "demo_test",
+  "timestamp": "2025-06-18T15:54:23.303410",
+  "location": "789 Pine Street, Portland, OR",
+  "content": "DEMO: Flash flood warning issued for area near 789 Pine Street, Portland, OR. Water levels rising rapidly, evacuation orders in effect.",
+  "type": "flood",
+  "severity": "high",
+  "is_demo": true
+}

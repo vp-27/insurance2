@@ -1,0 +1,8 @@
+{
+  "source": "simulated_traffic",
+  "timestamp": "2025-06-18T15:32:36.862647",
+  "location": "40.7128,-74.006",
+  "content": "Traffic incident: Gas leak causing road closure. Emergency services responding.",
+  "type": "traffic",
+  "severity": "high"
+}

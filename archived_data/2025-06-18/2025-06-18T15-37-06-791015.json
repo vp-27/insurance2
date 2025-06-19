@@ -1,0 +1,9 @@
+{
+  "source": "demo_test",
+  "timestamp": "2025-06-18T15:37:06.791003",
+  "location": "25 Columbus Dr, Jersey City, NJ",
+  "content": "DEMO: Increased police activity reported near 25 Columbus Dr, Jersey City, NJ due to security incident. SWAT team deployment confirmed.",
+  "type": "crime",
+  "severity": "medium",
+  "is_demo": true
+}
