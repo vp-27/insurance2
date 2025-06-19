@@ -275,8 +275,17 @@ class DataFetcher:
             
             self.save_alert(crime_data)
     
-    def inject_test_alert(self, address: str, alert_type: str = "fire"):
+    def inject_test_alert(self, address: str, alert_type: str, active_alerts: List[str] = []):
         """Inject a test alert for demo purposes - clearly marked as demo data"""
+        
+        # First, remove any existing demo files for this address to clean slate
+        self.remove_demo_files_for_address(address)
+        
+        # If active_alerts is empty, it means we are deactivating all alerts
+        if not active_alerts:
+            print(f"All demo alerts deactivated and removed for {address}")
+            return
+
         test_alerts = {
             'fire': {
                 'source': 'demo_test',
@@ -334,12 +343,16 @@ class DataFetcher:
             }
         }
         
-        alert = test_alerts.get(alert_type, test_alerts['fire'])
-        self.save_alert(alert)
-        print(f"Injected DEMO {alert_type} alert for {address}")
+        # Inject alerts for all active types
+        for alert_t in active_alerts:
+            alert = test_alerts.get(alert_t)
+            if alert:
+                self.save_alert(alert)
+                print(f"Injected DEMO {alert_t} alert for {address}")
         
         # Also inject some demo news for context if this is a demo
-        self.inject_demo_news_alerts(address)
+        if active_alerts:
+            self.inject_demo_news_alerts(address)
     
     def inject_demo_news_alerts(self, location: str):
         """Inject demo news alerts ONLY when demo is explicitly triggered"""
@@ -543,6 +556,68 @@ class DataFetcher:
         r = 6371  # Radius of earth in kilometers
         
         return c * r
+    
+    def remove_demo_files_for_address(self, address: str):
+        """Remove all demo files associated with a specific address"""
+        try:
+            import os
+            import json
+            
+            if not os.path.exists(self.data_dir):
+                return
+            
+            # Address normalization for matching
+            address_lower = address.lower()
+            address_parts = set()
+            
+            # Extract key parts of the address for matching
+            if ',' in address:
+                parts = [part.strip() for part in address.split(',')]
+                address_parts.update(part.lower() for part in parts if len(part.strip()) > 2)
+            
+            import re
+            words = re.findall(r'\b\w{3,}\b', address_lower)
+            address_parts.update(words)
+            
+            removed_count = 0
+            for filename in os.listdir(self.data_dir):
+                if filename.endswith('.json'):
+                    filepath = os.path.join(self.data_dir, filename)
+                    try:
+                        with open(filepath, 'r') as f:
+                            data = json.load(f)
+                        
+                        # Check if this is a demo file
+                        is_demo = (
+                            data.get('is_demo', False) or 
+                            data.get('source', '') in ['demo_test', 'demo_news'] or
+                            'DEMO:' in data.get('content', '')
+                        )
+                        
+                        if is_demo:
+                            # Check if this demo file is for the target address
+                            file_location = data.get('location', '').lower()
+                            file_content = data.get('content', '').lower()
+                            
+                            # Check if any part of the target address appears in the demo file
+                            address_matches = any(
+                                part in file_location or part in file_content 
+                                for part in address_parts 
+                                if len(part) > 3
+                            )
+                            
+                            if address_matches:
+                                os.remove(filepath)
+                                removed_count += 1
+                                print(f"🗑️ Removed demo file for {address}: {filename}")
+                    
+                    except Exception as e:
+                        print(f"Error processing {filename}: {e}")
+            
+            print(f"Removed {removed_count} demo files for address: {address}")
+            
+        except Exception as e:
+            print(f"Error removing demo files: {e}")
 
 if __name__ == "__main__":
     from dotenv import load_dotenv

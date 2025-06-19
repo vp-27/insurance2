@@ -39,7 +39,8 @@ class AssessmentRequest(BaseModel):
 
 class TestAlertRequest(BaseModel):
     address: str
-    alert_type: str = "fire"  # fire, flood, crime
+    alert_type: str
+    active_alerts: list[str] = []
 
 class DemoModeRequest(BaseModel):
     address: str
@@ -543,6 +544,7 @@ async def get_frontend():
                 const [isLive, setIsLive] = useState(false);
                 const [alertAnimating, setAlertAnimating] = useState(false);
                 const [notification, setNotification] = useState(null);
+                const [activeAlerts, setActiveAlerts] = useState([]);
 
                 const getRiskColor = (score) => {
                     if (score <= 2) return 'risk-low';
@@ -616,6 +618,19 @@ async def get_frontend():
                         alert('Please enter an address first');
                         return;
                     }
+
+                    const newActiveAlerts = activeAlerts.includes(alertType)
+                        ? activeAlerts.filter(a => a !== alertType)
+                        : [...activeAlerts, alertType];
+                    
+                    setActiveAlerts(newActiveAlerts);
+
+                    if (newActiveAlerts.length === 0) {
+                        setAlertAnimating(false);
+                        setLoadingAnalysis(false);
+                        fetchAssessment(); // Refresh assessment when all alerts are cleared
+                        return;
+                    }
                     
                     setAlertAnimating(true);
                     setLoadingAnalysis(true);
@@ -629,7 +644,7 @@ async def get_frontend():
                     };
                     
                     setNotification({
-                        message: `${alertIcons[alertType]} ${alertType.charAt(0).toUpperCase() + alertType.slice(1)} alert injected! Processing...`,
+                        message: `${alertIcons[alertType]} ${alertType.charAt(0).toUpperCase() + alertType.slice(1)} alert demo is now ${newActiveAlerts.includes(alertType) ? 'active' : 'inactive'}! Processing...`,
                         type: 'info'
                     });
                     
@@ -639,7 +654,7 @@ async def get_frontend():
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ address, alert_type: alertType }),
+                            body: JSON.stringify({ address, alert_type: alertType, active_alerts: newActiveAlerts }),
                         });
                         
                         if (response.ok) {
@@ -731,9 +746,10 @@ async def get_frontend():
 
                 // Reset assessment when address changes
                 useEffect(() => {
-                    if (assessment && address.trim()) {
+                    if (address.trim()) {
                         // Clear current assessment to show that new data is needed
                         setAssessment(null);
+                        setActiveAlerts([]);
                         setLoadingAnalysis(true);
                         // Auto-clear loading state after a delay if no new assessment is fetched
                         const timeout = setTimeout(() => {
@@ -1172,19 +1188,17 @@ async def get_frontend():
                                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <button
                                         onClick={() => injectTestAlert('fire')}
-                                        disabled={alertAnimating}
+                                        disabled={alertAnimating && !activeAlerts.includes('fire')}
                                         className={`demo-button bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 ${
-                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
+                                            activeAlerts.includes('fire') ? 'ring-4 ring-offset-2 ring-red-500' : ''
+                                        } ${alertAnimating && !activeAlerts.includes('fire') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        {alertAnimating ? (
-                                            <span className="flex items-center justify-center">
-                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Processing...
-                                            </span>
+                                        {activeAlerts.includes('fire') ? (
+                                            <>
+                                                <i className="fas fa-check-circle text-2xl mb-2"></i>
+                                                <div className="font-bold">Fire Alert Active</div>
+                                                <div className="text-xs opacity-90">Click to Deactivate</div>
+                                            </>
                                         ) : (
                                             <>
                                                 <i className="fas fa-fire text-2xl mb-2"></i>
@@ -1195,19 +1209,17 @@ async def get_frontend():
                                     </button>
                                     <button
                                         onClick={() => injectTestAlert('flood')}
-                                        disabled={alertAnimating}
+                                        disabled={alertAnimating && !activeAlerts.includes('flood')}
                                         className={`demo-button bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 ${
-                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
+                                            activeAlerts.includes('flood') ? 'ring-4 ring-offset-2 ring-blue-500' : ''
+                                        } ${alertAnimating && !activeAlerts.includes('flood') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        {alertAnimating ? (
-                                            <span className="flex items-center justify-center">
-                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Processing...
-                                            </span>
+                                        {activeAlerts.includes('flood') ? (
+                                            <>
+                                                <i className="fas fa-check-circle text-2xl mb-2"></i>
+                                                <div className="font-bold">Flood Alert Active</div>
+                                                <div className="text-xs opacity-90">Click to Deactivate</div>
+                                            </>
                                         ) : (
                                             <>
                                                 <i className="fas fa-water text-2xl mb-2"></i>
@@ -1218,19 +1230,17 @@ async def get_frontend():
                                     </button>
                                     <button
                                         onClick={() => injectTestAlert('crime')}
-                                        disabled={alertAnimating}
+                                        disabled={alertAnimating && !activeAlerts.includes('crime')}
                                         className={`demo-button bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 ${
-                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
+                                            activeAlerts.includes('crime') ? 'ring-4 ring-offset-2 ring-yellow-500' : ''
+                                        } ${alertAnimating && !activeAlerts.includes('crime') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        {alertAnimating ? (
-                                            <span className="flex items-center justify-center">
-                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Processing...
-                                            </span>
+                                        {activeAlerts.includes('crime') ? (
+                                            <>
+                                                <i className="fas fa-check-circle text-2xl mb-2"></i>
+                                                <div className="font-bold">Crime Alert Active</div>
+                                                <div className="text-xs opacity-90">Click to Deactivate</div>
+                                            </>
                                         ) : (
                                             <>
                                                 <i className="fas fa-exclamation-triangle text-2xl mb-2"></i>
@@ -1241,19 +1251,17 @@ async def get_frontend():
                                     </button>
                                     <button
                                         onClick={() => injectTestAlert('earthquake')}
-                                        disabled={alertAnimating}
+                                        disabled={alertAnimating && !activeAlerts.includes('earthquake')}
                                         className={`demo-button bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 ${
-                                            alertAnimating ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
+                                            activeAlerts.includes('earthquake') ? 'ring-4 ring-offset-2 ring-purple-500' : ''
+                                        } ${alertAnimating && !activeAlerts.includes('earthquake') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        {alertAnimating ? (
-                                            <span className="flex items-center justify-center">
-                                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Processing...
-                                            </span>
+                                        {activeAlerts.includes('earthquake') ? (
+                                            <>
+                                                <i className="fas fa-check-circle text-2xl mb-2"></i>
+                                                <div className="font-bold">Earthquake Alert Active</div>
+                                                <div className="text-xs opacity-90">Click to Deactivate</div>
+                                            </>
                                         ) : (
                                             <>
                                                 <i className="fas fa-mountain text-2xl mb-2"></i>
@@ -1302,11 +1310,11 @@ async def inject_test_alert(request: TestAlertRequest):
             raise HTTPException(status_code=500, detail="Data fetcher not initialized")
         
         # Inject the test alert
-        data_fetcher.inject_test_alert(request.address, request.alert_type)
+        data_fetcher.inject_test_alert(request.address, request.alert_type, request.active_alerts)
         
         return {
             "success": True,
-            "message": f"{request.alert_type} alert injected for {request.address}"
+            "message": f"Alert status updated for {request.address}"
         }
         
     except Exception as e:
@@ -1390,6 +1398,11 @@ async def force_data_cleanup():
         raise HTTPException(status_code=500, detail="Data manager not initialized")
     
     result = data_manager.force_cleanup()
+    
+    # Also clear the RAG pipeline's in-memory document store
+    if rag_pipeline:
+        rag_pipeline.clear_document_store()
+    
     return {
         "success": True,
         "message": "Data cleanup completed",

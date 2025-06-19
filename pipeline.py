@@ -314,106 +314,102 @@ class LiveRAGPipeline:
             return self.simulate_llm_response(prompt)
     
     def simulate_llm_response(self, prompt: str) -> str:
-        """Context-aware simulation that respects demo vs real alert separation"""
+        """Context-aware simulation that considers both real and demo incidents"""
         # Extract address from prompt for personalized response
         import re
         address_match = re.search(r'PROPERTY: ([^\n]+)', prompt)
         address = address_match.group(1) if address_match else "the specified location"
         
-        # Analyze prompt structure to distinguish demo scenarios
+        # Look for the unified incidents section in the new prompt format
         prompt_lower = prompt.lower()
+        incidents_section = ""
         
-        # Check if this prompt has the demo warning structure
-        has_demo_warning = "demo/test alerts" in prompt_lower and "ignore" in prompt_lower
+        if "current incidents" in prompt_lower:
+            incidents_start = prompt.find("CURRENT INCIDENTS")
+            if incidents_start != -1:
+                # Find the end of the incidents section
+                next_section_patterns = ["Assessment Instructions:", "Assessment Requirements:", "Provide a comprehensive"]
+                end_pos = len(prompt)
+                for pattern in next_section_patterns:
+                    pattern_pos = prompt.find(pattern, incidents_start)
+                    if pattern_pos != -1:
+                        end_pos = min(end_pos, pattern_pos)
+                incidents_section = prompt[incidents_start:end_pos]
         
-        # Extract the real incidents section
-        real_incident_section = ""
-        if "real incidents:" in prompt_lower:
-            real_start = prompt.find("REAL INCIDENTS")
-            if real_start != -1:
-                # Find the end of the real incidents section
-                demo_start = prompt.find("DEMO/TEST ALERTS")
-                if demo_start != -1 and demo_start > real_start:
-                    real_incident_section = prompt[real_start:demo_start]
-                else:
-                    # Find next major section
-                    next_section_patterns = ["CRITICAL INSTRUCTIONS:", "Assessment Instructions:", "Assessment Requirements:"]
-                    end_pos = len(prompt)
-                    for pattern in next_section_patterns:
-                        pattern_pos = prompt.find(pattern, real_start)
-                        if pattern_pos != -1:
-                            end_pos = min(end_pos, pattern_pos)
-                    real_incident_section = prompt[real_start:end_pos]
+        # Count different types of incidents
+        fire_incidents = incidents_section.lower().count("fire")
+        flood_incidents = incidents_section.lower().count("flood") 
+        crime_incidents = incidents_section.lower().count("crime") + incidents_section.lower().count("theft") + incidents_section.lower().count("larceny")
+        earthquake_incidents = incidents_section.lower().count("earthquake")
         
-        # Check what kind of real incidents exist
-        no_real_incidents = (
-            "no recent real incidents detected" in real_incident_section.lower() or
-            "location appears stable" in real_incident_section.lower() or
-            real_incident_section.strip() == "" or
-            "REAL INCIDENTS" not in real_incident_section
-        )
+        total_incidents = fire_incidents + flood_incidents + crime_incidents + earthquake_incidents
         
         print(f"🤖 Simulation mode analysis:")
-        print(f"   - Has demo warning: {has_demo_warning}")
-        print(f"   - No real incidents: {no_real_incidents}")
-        print(f"   - Real section: {real_incident_section[:100]}...")
+        print(f"   - Fire incidents: {fire_incidents}")
+        print(f"   - Flood incidents: {flood_incidents}")
+        print(f"   - Crime incidents: {crime_incidents}")
+        print(f"   - Earthquake incidents: {earthquake_incidents}")
+        print(f"   - Total incidents: {total_incidents}")
         
-        # CRITICAL: If this is a demo scenario with instructions to ignore demo alerts,
-        # and there are no real incidents, return LOW RISK
-        if has_demo_warning and no_real_incidents:
-            print("🔄 Demo scenario detected - returning LOW RISK assessment")
-            return f"""**✅ SAFE AREA ASSESSMENT for {address}**
-
-**Risk Summary:** Area analysis indicates NORMAL/LOW risk levels. No verified real incidents detected in the vicinity. Demo alerts were properly excluded from risk assessment as instructed.
-
-**Risk Score:** 2/10
-
-**Insurance Quote:** $550/month for $1M coverage (standard low-risk rate)
-
-**Assessment Details:**
-- No active real-world incidents detected in the area
-- Demo/test alerts properly filtered out as instructed
-- Standard area risk profile maintained
-- Normal emergency service activity levels
-- Safe area with routine coverage requirements
-
-**Location Status:** All systems normal, area classified as stable with standard risk levels."""
+        # Calculate risk based on incident types and count
+        base_risk = 3
+        risk_modifiers = 0
+        risk_factors = []
         
-        # Check for specific real incident types in the real incidents section
-        elif "harrassment" in real_incident_section.lower() or "petit larceny" in real_incident_section.lower():
-            print("🚨 Low-level crime incidents detected")
-            return f"""**⚠️ MODERATE RISK ASSESSMENT for {address}**
-
-**Risk Summary:** Minor criminal incidents detected in the area including harassment and petit larceny reports. These represent typical urban activity requiring monitoring but not critical risk.
-
-**Risk Score:** 4/10
-
-**Insurance Quote:** $700/month for $1M coverage (moderate increase)
-
-**Assessment Details:**
-- Minor criminal activity reported in vicinity
-- No major incidents or emergency situations
-- Standard urban risk profile
-- Normal law enforcement response
-- Routine monitoring recommended"""
+        if fire_incidents > 0:
+            risk_modifiers += 2 * fire_incidents
+            risk_factors.append(f"Fire incidents detected ({fire_incidents})")
+            
+        if flood_incidents > 0:
+            risk_modifiers += 2 * flood_incidents  
+            risk_factors.append(f"Flood incidents detected ({flood_incidents})")
+            
+        if earthquake_incidents > 0:
+            risk_modifiers += 3 * earthquake_incidents
+            risk_factors.append(f"Earthquake incidents detected ({earthquake_incidents})")
+            
+        if crime_incidents > 0:
+            risk_modifiers += 1 * crime_incidents
+            risk_factors.append(f"Criminal activity detected ({crime_incidents})")
         
-        # For other scenarios, return standard risk
+        final_risk = min(10, max(1, base_risk + risk_modifiers))
+        
+        # Calculate premium based on risk
+        base_premium = 500
+        premium = base_premium * (1 + 0.1 * final_risk)
+        
+        # Generate appropriate response based on risk level
+        if final_risk <= 3:
+            risk_level = "LOW"
+            status_emoji = "✅"
+            assessment_type = "SAFE AREA"
+        elif final_risk <= 6:
+            risk_level = "MODERATE" 
+            status_emoji = "⚠️"
+            assessment_type = "MODERATE RISK"
         else:
-            print("📊 Standard risk assessment - no specific risks detected")
-            return f"""**📊 STANDARD RISK ASSESSMENT for {address}**
+            risk_level = "HIGH"
+            status_emoji = "🚨"
+            assessment_type = "HIGH RISK"
+            
+        risk_details = risk_factors if risk_factors else ["No significant incidents detected", "Standard area risk profile"]
+        
+        print(f"� Calculated risk: {final_risk}/10 ({risk_level}) - Premium: ${premium:.0f}")
+        
+        return f"""**{status_emoji} {assessment_type} ASSESSMENT for {address}**
 
-**Risk Summary:** Current analysis indicates NORMAL risk levels for the area. Standard location-based risk factors apply with no major incidents detected.
+**Risk Summary:** {'Multiple risk factors detected requiring increased coverage.' if total_incidents > 1 else 'Risk assessment based on current incident data and location factors.' if total_incidents == 1 else 'Standard risk assessment with no major incidents detected.'}
 
-**Risk Score:** 3/10
+**Risk Score:** {final_risk}/10
 
-**Insurance Quote:** $650/month for $1M coverage (standard rate)
+**Insurance Quote:** ${premium:.0f}/month for $1M coverage
 
 **Assessment Details:**
-- No critical incidents detected
-- Standard area risk profile  
-- Normal emergency service coverage
-- Routine insurance coverage recommended
-- No elevated threat indicators present"""
+{chr(10).join(f'- {factor}' for factor in risk_details)}
+- Location-based risk factors considered
+- {'Emergency response protocols recommended' if final_risk > 6 else 'Standard monitoring protocols' if final_risk > 3 else 'Routine coverage requirements'}
+
+**Status:** {'Elevated risk area requiring enhanced coverage' if final_risk > 6 else 'Moderate risk area with standard coverage' if final_risk > 3 else 'Safe area with normal risk levels'}"""
     
     async def query_rag(self, address: str, query: str) -> Dict[str, Any]:
         """Main RAG query function with location-specific analysis"""
@@ -439,10 +435,64 @@ class LiveRAGPipeline:
         real_incidents = []
         test_incidents = []
         
+        # Extract key location identifiers from the address for filtering
+        address_lower = address.lower()
+        address_parts = set()
+        
+        # Extract city, state, street names, etc.
+        import re
+        # Common patterns: "Street Name, City, State" or "Number Street Name, City, State"
+        if ',' in address:
+            parts = [part.strip() for part in address.split(',')]
+            # Use more specific parts (avoid generic words)
+            for part in parts:
+                if len(part.strip()) > 4 and part.strip().lower() not in ['street', 'avenue', 'lane', 'road', 'dr', 'ave']:
+                    address_parts.add(part.strip().lower())
+        
+        # Extract street name and number more precisely
+        street_match = re.match(r'(\d+)\s+(.+?)(?:\s+(?:st|street|ave|avenue|lane|ln|road|rd|dr|drive))?(?:\s*,|$)', address, re.IGNORECASE)
+        if street_match:
+            number, street_name = street_match.groups()
+            if len(street_name.strip()) > 3:
+                address_parts.add(street_name.strip().lower())
+            # Only use street number if it's unique enough (3+ digits)
+            if len(number) >= 3:
+                address_parts.add(number)
+        
+        # Remove generic words that cause false matches
+        generic_words = {'the', 'and', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'street', 'avenue', 'lane', 'road', 'drive'}
+        address_parts = {part for part in address_parts if part not in generic_words and len(part) > 2}
+        
+        print(f"🔍 Address filtering for: {address}")
+        print(f"    Looking for specific parts: {address_parts}")
+        
         for doc in relevant_docs:
             source = doc['metadata'].get('source', '')
             content = doc['content']
             is_demo = doc['metadata'].get('is_demo', False)
+            doc_location = doc['metadata'].get('location', '').lower()
+            
+            # Check if this incident is relevant to the specific address
+            is_location_relevant = False
+            
+            if is_demo:
+                # For demo alerts, check if the content mentions the specific address
+                content_lower = content.lower()
+                if any(part in content_lower for part in address_parts if len(part) > 3):
+                    is_location_relevant = True
+                    print(f"📋 Demo incident matches address: {content[:50]}...")
+                else:
+                    print(f"🚫 Demo incident filtered out (different location): {content[:50]}...")
+                    continue
+            else:
+                # For real incidents, use broader location matching (same city/area)
+                if any(part in doc_location for part in address_parts if len(part) > 3):
+                    is_location_relevant = True
+                elif any(part in content.lower() for part in address_parts if len(part) > 4):
+                    is_location_relevant = True
+                else:
+                    print(f"🚫 Real incident filtered out (different location): {content[:50]}...")
+                    continue
             
             # More robust demo/test detection
             demo_indicators = ['manual_injection', 'test', 'simulated', 'demo_test', 'demo_news', 'demo']
@@ -471,61 +521,41 @@ class LiveRAGPipeline:
                     real_incidents.append(f"INCIDENT: {content}")
                     print(f"⚠️ Classified as REAL (unknown source): {source} - {content[:50]}...")
         
-        # Build separate context sections
-        real_context = "\n".join(real_incidents) if real_incidents else "No recent real incidents detected in the area. Location appears stable."
-        test_context = "\n".join(test_incidents) if test_incidents else "No demo/test alerts active."
+        # Combine real and test incidents for a unified risk assessment
+        all_incidents = real_incidents + test_incidents
         
-        print(f"📊 Analysis summary: {len(real_incidents)} real incidents, {len(test_incidents)} demo alerts")
-        
-        # Only include test context if there are actual test incidents
-        if test_incidents:
-            prompt = f"""You are an AI Insurance Underwriting Assistant analyzing property risk.
+        # Clean up prefixes for a unified view, making them all "ALERT"
+        all_incidents_cleaned = []
+        for incident in all_incidents:
+            # Remove existing prefixes and add a standard one
+            content = incident.split(": ", 1)[-1]
+            all_incidents_cleaned.append(f"ALERT: {content}")
+
+        incident_context = "\n".join(all_incidents_cleaned) if all_incidents_cleaned else "No recent incidents detected in the area. Location appears stable."
+
+        print(f"📊 Analysis summary: {len(real_incidents)} real incidents, {len(test_incidents)} demo alerts. Combined for assessment.")
+
+        # A single, unified prompt that treats all incidents (real or demo) as valid for risk calculation
+        prompt = f"""You are an AI Insurance Underwriting Assistant analyzing property risk.
 
 PROPERTY: {address}
 
 LOCATION ANALYSIS:
 {location_context}
 
-REAL INCIDENTS (use for risk calculation):
-{real_context}
-
-DEMO/TEST ALERTS (for reference only - COMPLETELY IGNORE in risk calculation):
-{test_context}
-
-CRITICAL INSTRUCTIONS: 
-- Base your risk assessment ONLY on REAL incidents and location factors
-- Demo/test alerts are simulated training data and MUST BE COMPLETELY IGNORED in scoring
-- If only demo/test alerts are present with no real incidents, treat the area as SAFE with low risk
-- Risk score should reflect ONLY actual verified incidents, not simulated scenarios
-
-Assessment Requirements:
-1. Risk summary focusing ONLY on verified real incidents and location factors
-2. Risk score from 1 (safe) to 10 (critical) - based ONLY on REAL incidents
-3. Monthly insurance quote for $1M coverage
-
-Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score)
-Factor in location-specific risks but COMPLETELY IGNORE all demo/test scenarios."""
-        else:
-            # No test alerts - normal assessment
-            prompt = f"""You are an AI Insurance Underwriting Assistant analyzing property risk.
-
-PROPERTY: {address}
-
-LOCATION ANALYSIS:
-{location_context}
-
-CURRENT REAL INCIDENTS:
-{real_context}
+CURRENT INCIDENTS (includes real-time data and active demo events):
+{incident_context}
 
 Assessment Instructions:
-- Base your assessment only on verified real-world data and location factors
-- If no real incidents are present, consider this a SAFE area with normal risk levels
-- Do not invent or simulate incidents - if the area is quiet, that's a positive indicator
+- Base your assessment on ALL available data: real-world incidents, active demo events, and location factors.
+- Treat active demo events (e.g., fire, flood) as if they are real events for this risk assessment. Their presence signifies an elevated risk scenario.
+- The presence of multiple incidents (real or demo) should cumulatively increase the perceived risk and the final risk score.
+- If no incidents are present, assess risk based on location factors alone.
 
 Provide a comprehensive risk assessment including:
-1. Risk summary considering location factors and any current verified incidents
-2. Risk score from 1 (safe) to 10 (critical) based on actual conditions
-3. Monthly insurance quote for $1M coverage
+1. A risk summary that clearly mentions the active demo events (if any) and their impact on the assessment.
+2. A risk score from 1 (safe) to 10 (critical) based on the combined impact of all real and demo incidents.
+3. A monthly insurance quote for $1M coverage, calculated from the final risk score.
 
 Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score)"""
         
@@ -618,6 +648,13 @@ Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score
             total_multiplier *= dampened_multiplier
         
         return base_quote * total_multiplier
+
+    def clear_document_store(self):
+        """Clear the in-memory document store"""
+        self.documents = []
+        self.embeddings = []
+        self.document_metadata = []
+        print("🧹 Cleared in-memory document store")
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
