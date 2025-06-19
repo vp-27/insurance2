@@ -15,15 +15,30 @@ class LocationAnalyzer:
         self.geolocator = Nominatim(user_agent="insurance_risk_analyzer")
         
     def get_coordinates(self, address: str) -> tuple:
-        """Get latitude and longitude for an address"""
-        try:
-            location = self.geolocator.geocode(address, timeout=10)
-            if location:
-                return location.latitude, location.longitude
-            return None, None
-        except (GeocoderTimedOut, Exception) as e:
-            print(f"Geocoding error for {address}: {e}")
-            return None, None
+        """Get latitude and longitude for an address with retry logic"""
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                # Increase timeout and add retry logic
+                location = self.geolocator.geocode(address, timeout=15)
+                if location:
+                    print(f"✅ Geocoding successful for {address}: {location.latitude}, {location.longitude}")
+                    return location.latitude, location.longitude
+                else:
+                    print(f"⚠️ No geocoding result for {address} (attempt {attempt + 1})")
+            except GeocoderTimedOut:
+                print(f"⚠️ Geocoding timeout for {address} (attempt {attempt + 1})")
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(1)  # Wait before retry
+                continue
+            except Exception as e:
+                print(f"❌ Geocoding error for {address}: {e}")
+                break
+        
+        print(f"❌ Failed to geocode {address} after {max_retries} attempts, using fallback")
+        return None, None
     
     def analyze_location_risk_factors(self, address: str) -> Dict[str, Any]:
         """Analyze location-specific risk factors"""

@@ -1,9 +1,0 @@
-{
-  "source": "demo_test",
-  "timestamp": "2025-06-18T14:52:28.879551",
-  "location": "Test Location",
-  "content": "DEMO: 4-alarm fire reported near Test Location. Emergency services on scene with multiple fire trucks and ambulances responding.",
-  "type": "fire",
-  "severity": "critical",
-  "is_demo": true
-}

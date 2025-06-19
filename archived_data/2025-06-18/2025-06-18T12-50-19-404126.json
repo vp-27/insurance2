@@ -1,8 +1,0 @@
-{
-  "source": "simulated_infrastructure",
-  "timestamp": "2025-06-18T12:50:19.404093",
-  "location": "40.7128,-74.006",
-  "content": "Infrastructure alert: Sewer backup causing basement flooding risk",
-  "type": "infrastructure",
-  "severity": "medium"
-}

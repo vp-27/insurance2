@@ -1,9 +1,0 @@
-{
-  "source": "demo_news",
-  "timestamp": "2025-06-18T14:52:28.879897",
-  "location": "Test Location",
-  "content": "DEMO: Local fire department responds to commercial building fire on Main Street. Multiple units on scene.",
-  "type": "news",
-  "severity": "medium",
-  "is_demo": true
-}

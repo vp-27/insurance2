@@ -1,9 +1,0 @@
-{
-  "source": "demo_test",
-  "timestamp": "2025-06-18T15:10:24.449857",
-  "location": "11 Blanche Street, Secaucus, NJ",
-  "content": "DEMO: Flash flood warning issued for area near 11 Blanche Street, Secaucus, NJ. Water levels rising rapidly, evacuation orders in effect.",
-  "type": "flood",
-  "severity": "high",
-  "is_demo": true
-}

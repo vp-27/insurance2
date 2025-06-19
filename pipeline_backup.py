@@ -1,32 +1,12 @@
-try:
-    import pathway as pw
-except ImportError:
-    # Mock pathway for development
-    class MockPathway:
-        def __init__(self):
-            pass
-        def run(self):
-            print("Mock Pathway pipeline running...")
-            return "Mock pipeline completed"
-    pw = MockPathway()
-
+import pathway as pw
 import asyncio
 import json
 import os
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import requests
-
-# Handle optional ML dependencies
-try:
-    from sentence_transformers import SentenceTransformer
-    import numpy as np
-    HAS_ML_DEPS = True
-except ImportError:
-    print("Warning: ML dependencies not available. Some features will be limited.")
-    SentenceTransformer = None
-    np = None
-    HAS_ML_DEPS = False
+from sentence_transformers import SentenceTransformer
+import numpy as np
 from location_analyzer import LocationAnalyzer
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -64,11 +44,7 @@ class LiveRAGPipeline:
             print("⚠️ OpenRouter API key not found or invalid - using simulation mode")
         
         # Initialize embedding model
-        if HAS_ML_DEPS and SentenceTransformer:
-            self.embedding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-        else:
-            self.embedding_model = None
-            print("Warning: Embedding model not available. Vector search disabled.")
+        self.embedding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
         
         # Store for vector index
         self.documents = []
@@ -137,13 +113,9 @@ class LiveRAGPipeline:
         self.input_table = None
         self.processed_table = None
     
-    def embed_text(self, text: str) -> Any:
+    def embed_text(self, text: str) -> np.ndarray:
         """Generate embeddings for text"""
-        if self.embedding_model:
-            return self.embedding_model.encode(text)
-        else:
-            # Return a simple hash-based representation as fallback
-            return [hash(text) % 1000 for _ in range(384)]  # Mock 384-dim vector
+        return self.embedding_model.encode(text)
     
     def add_document(self, doc_data: Dict[str, Any]):
         """Add a document to the vector store"""
@@ -273,95 +245,88 @@ class LiveRAGPipeline:
             return self.simulate_llm_response(prompt)
     
     def simulate_llm_response(self, prompt: str) -> str:
-        """Context-aware simulation that respects demo vs real alert separation"""
+        """Simulate LLM response when API is not available - context-aware simulation"""
         # Extract address from prompt for personalized response
         import re
         address_match = re.search(r'PROPERTY: ([^\n]+)', prompt)
         address = address_match.group(1) if address_match else "the specified location"
         
-        # Analyze prompt structure to distinguish demo scenarios
+        # Analyze prompt content for real vs demo incidents
         prompt_lower = prompt.lower()
         
-        # Check if this prompt has the demo warning structure
+        # Check if the prompt indicates demo/test alerts should be ignored
         has_demo_warning = "demo/test alerts" in prompt_lower and "ignore" in prompt_lower
         
-        # Extract the real incidents section
+        # Check for real incidents in the prompt
+        has_real_incidents = "real incidents:" in prompt_lower
         real_incident_section = ""
-        if "real incidents:" in prompt_lower:
+        if has_real_incidents:
+            # Extract the real incidents section
             real_start = prompt.find("REAL INCIDENTS")
+            demo_start = prompt.find("DEMO/TEST ALERTS")
             if real_start != -1:
-                # Find the end of the real incidents section
-                demo_start = prompt.find("DEMO/TEST ALERTS")
                 if demo_start != -1 and demo_start > real_start:
                     real_incident_section = prompt[real_start:demo_start]
                 else:
-                    # Find next major section
-                    next_section_patterns = ["CRITICAL INSTRUCTIONS:", "Assessment Instructions:", "Assessment Requirements:"]
-                    end_pos = len(prompt)
-                    for pattern in next_section_patterns:
-                        pattern_pos = prompt.find(pattern, real_start)
-                        if pattern_pos != -1:
-                            end_pos = min(end_pos, pattern_pos)
-                    real_incident_section = prompt[real_start:end_pos]
+                    # Find the end of the real incidents section
+                    location_start = prompt.find("LOCATION ANALYSIS")
+                    if location_start != -1 and location_start < real_start:
+                        # Find next section after real incidents
+                        next_section = prompt.find("\n\n", real_start + 100)
+                        if next_section != -1:
+                            real_incident_section = prompt[real_start:next_section]
+                        else:
+                            real_incident_section = prompt[real_start:]
         
         # Check what kind of real incidents exist
         no_real_incidents = (
             "no recent real incidents detected" in real_incident_section.lower() or
             "location appears stable" in real_incident_section.lower() or
-            real_incident_section.strip() == "" or
-            "REAL INCIDENTS" not in real_incident_section
+            real_incident_section.strip() == ""
         )
         
-        print(f"🤖 Simulation mode analysis:")
-        print(f"   - Has demo warning: {has_demo_warning}")
-        print(f"   - No real incidents: {no_real_incidents}")
-        print(f"   - Real section: {real_incident_section[:100]}...")
-        
-        # CRITICAL: If this is a demo scenario with instructions to ignore demo alerts,
-        # and there are no real incidents, return LOW RISK
+        # Determine risk level based on actual content
         if has_demo_warning and no_real_incidents:
-            print("🔄 Demo scenario detected - returning LOW RISK assessment")
-            return f"""**✅ SAFE AREA ASSESSMENT for {address}**
+            # This is a demo scenario with no real incidents - return low risk
+            return f"""**✅ STANDARD RISK ASSESSMENT for {address}**
 
-**Risk Summary:** Area analysis indicates NORMAL/LOW risk levels. No verified real incidents detected in the vicinity. Demo alerts were properly excluded from risk assessment as instructed.
+**Risk Summary:** Current analysis indicates NORMAL risk levels for the area. No significant incidents, weather alerts, or emergency conditions detected that would materially impact the property's risk profile. Demo alerts detected but properly excluded from risk calculation.
 
 **Risk Score:** 2/10
 
-**Insurance Quote:** $550/month for $1M coverage (standard low-risk rate)
+**Insurance Quote:** $550/month for $1M coverage (standard rate)
 
 **Assessment Details:**
-- No active real-world incidents detected in the area
-- Demo/test alerts properly filtered out as instructed
-- Standard area risk profile maintained
-- Normal emergency service activity levels
-- Safe area with routine coverage requirements
+• No active real-world incidents detected in the area
+• Demo/test alerts properly filtered out of assessment
+• Standard area risk profile maintained
+• Normal emergency service activity levels
+• Routine coverage requirements apply
 
-**Location Status:** All systems normal, area classified as stable with standard risk levels."""
-        
-        # Check for specific real incident types in the real incidents section
+**Location Status:** All systems normal, area appears stable with standard risk levels."""
+
         elif "harrassment" in real_incident_section.lower() or "petit larceny" in real_incident_section.lower():
-            print("🚨 Low-level crime incidents detected")
+            # Low-level crime incidents
             return f"""**⚠️ MODERATE RISK ASSESSMENT for {address}**
 
-**Risk Summary:** Minor criminal incidents detected in the area including harassment and petit larceny reports. These represent typical urban activity requiring monitoring but not critical risk.
+**Risk Summary:** Minor criminal incidents detected in the area including harassment and petit larceny reports. These represent typical urban activity that requires monitoring but does not constitute critical risk.
 
 **Risk Score:** 4/10
 
 **Insurance Quote:** $700/month for $1M coverage (moderate increase)
 
 **Assessment Details:**
-- Minor criminal activity reported in vicinity
-- No major incidents or emergency situations
-- Standard urban risk profile
-- Normal law enforcement response
-- Routine monitoring recommended"""
-        
-        # For other scenarios, return standard risk
+• Minor criminal activity reported in vicinity
+• No major incidents or emergency situations
+• Standard urban risk profile
+• Normal law enforcement response
+• Routine monitoring recommended"""
+
         else:
-            print("📊 Standard risk assessment - no specific risks detected")
+            # Default to moderate risk for unknown situations
             return f"""**📊 STANDARD RISK ASSESSMENT for {address}**
 
-**Risk Summary:** Current analysis indicates NORMAL risk levels for the area. Standard location-based risk factors apply with no major incidents detected.
+**Risk Summary:** Current analysis indicates NORMAL to MODERATE risk levels for the area. Standard location-based risk factors apply with no major incidents detected.
 
 **Risk Score:** 3/10
 
@@ -369,10 +334,136 @@ class LiveRAGPipeline:
 
 **Assessment Details:**
 - No critical incidents detected
-- Standard area risk profile  
+- Standard area risk profile
 - Normal emergency service coverage
 - Routine insurance coverage recommended
 - No elevated threat indicators present"""
+            return f"""**🌊 HIGH RISK ASSESSMENT for {address}**
+
+**Risk Summary:** FLOOD WARNING detected with rising water levels. Significant risk to property foundations, electrical systems, and structural integrity requiring immediate attention.
+
+**Risk Score:** 7/10
+
+**Insurance Quote:** $850/month for $1M coverage (70% increase from base rate)
+
+**Key Risk Factors:**
+• Flash flood conditions with rapidly rising water
+• Foundation and basement flooding potential
+• Electrical system vulnerability
+• HVAC equipment damage risk
+• Business interruption likelihood
+
+**Mitigation Actions:**
+• Implement flood protection measures
+• Elevate critical equipment
+• Monitor drainage systems"""
+
+        elif "earthquake" in prompt_lower or "magnitude" in prompt_lower:
+            return f"""**🏗️ HIGH RISK ASSESSMENT for {address}**
+
+**Risk Summary:** SEISMIC ACTIVITY detected. Magnitude 4.2 earthquake requires structural assessment and elevated monitoring for potential aftershocks and building integrity issues.
+
+**Risk Score:** 8/10
+
+**Insurance Quote:** $900/month for $1M coverage (80% increase from base rate)
+
+**Seismic Risk Factors:**
+• Structural integrity concerns requiring inspection
+• Potential aftershock activity
+• Building code compliance verification needed
+• Foundation stability assessment required
+• Utility line disruption possible
+
+**Required Actions:**
+• Schedule immediate structural inspection
+• Review seismic safety protocols
+• Check utility connections"""
+
+        elif "crime" in prompt_lower or "police" in prompt_lower:
+            return f"""**🚨 ELEVATED RISK ASSESSMENT for {address}**
+
+**Risk Summary:** SECURITY INCIDENT with increased law enforcement presence. Enhanced security measures required due to elevated crime activity and potential ongoing threat assessment.
+
+**Risk Score:** 6/10
+
+**Insurance Quote:** $800/month for $1M coverage (60% increase from base rate)
+
+**Security Risk Factors:**
+• Active police investigation in vicinity
+• Potential for continued criminal activity
+• Security system effectiveness concerns
+• Staff safety protocols activation needed
+• Property access restrictions possible
+
+**Security Enhancements:**
+• Increase surveillance monitoring
+• Review access control systems
+• Coordinate with local law enforcement"""
+
+        elif "traffic" in prompt_lower or "collision" in prompt_lower:
+            return f"""**🚗 MODERATE RISK ASSESSMENT for {address}**
+
+**Risk Summary:** TRAFFIC INCIDENT affecting area accessibility. Multi-vehicle collision creating temporary operational disruptions and emergency service response delays.
+
+**Risk Score:** 4/10
+
+**Insurance Quote:** $700/month for $1M coverage (40% increase from base rate)
+
+**Traffic Impact Factors:**
+• Emergency service response delays
+• Customer/client access limitations
+• Delivery and logistics disruptions
+• Potential secondary incident risks
+
+**Operational Adjustments:**
+• Plan alternative access routes
+• Notify stakeholders of delays
+• Monitor traffic conditions"""
+
+        elif "infrastructure" in prompt_lower or "power" in prompt_lower:
+            return f"""**⚡ HIGH RISK ASSESSMENT for {address}**
+
+**Risk Summary:** CRITICAL INFRASTRUCTURE FAILURE affecting power grid stability. Multi-block power instability creates significant operational and safety risks requiring emergency protocols.
+
+**Risk Score:** 7/10
+
+**Insurance Quote:** $850/month for $1M coverage (70% increase from base rate)
+
+**Infrastructure Risk Factors:**
+• Power grid instability affecting operations
+• HVAC system failure potential
+• Security system vulnerability
+• Data system backup requirements
+• Emergency lighting activation needed
+
+**Emergency Measures:**
+• Activate backup power systems
+• Implement data protection protocols
+• Monitor utility restoration efforts"""
+
+        else:
+            return f"""**✅ STANDARD RISK ASSESSMENT for {address}**
+
+**Risk Summary:** Current analysis indicates NORMAL risk levels for the area. No significant incidents, weather alerts, or emergency conditions detected that would materially impact the property's risk profile.
+
+**Risk Score:** 2/10
+
+**Insurance Quote:** $600/month for $1M coverage (standard rate)
+
+**Baseline Assessment:**
+• No active weather or emergency alerts detected
+• Standard area risk profile maintained
+• Normal emergency service activity levels
+• Routine coverage requirements apply
+• No elevated threat indicators present
+
+**Regional Factors:**
+• Base location risk assessment: Low to moderate
+• Standard building and fire safety protocols in effect
+• Adequate emergency services coverage
+• No unusual environmental hazards detected
+
+**Status:** All systems normal, continue standard monitoring protocols."""
     
     async def query_rag(self, address: str, query: str) -> Dict[str, Any]:
         """Main RAG query function with location-specific analysis"""
@@ -558,9 +649,13 @@ Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score
         # Try to extract from LLM response first
         base_score = self.extract_risk_score(llm_response)
         
-        # If using default score, consider location factors
+        # If using default score (5), consider location factors and context
         if base_score == 5:  # Default fallback score
-            base_score = max(2, location_factors['base_risk_score'])
+            # Check if the response indicates this is a demo-only scenario
+            if "demo" in llm_response.lower() and "safe" in llm_response.lower():
+                base_score = max(1, int(location_factors.get('base_risk_score', 2)))
+            else:
+                base_score = max(2, int(location_factors.get('base_risk_score', 3)))
         
         # Ensure score is within bounds
         return max(1, min(10, int(base_score)))

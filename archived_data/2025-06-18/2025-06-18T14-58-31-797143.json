@@ -1,8 +1,0 @@
-{
-  "source": "simulated_traffic",
-  "timestamp": "2025-06-18T14:58:31.797079",
-  "location": "40.7128,-74.006",
-  "content": "Traffic incident: Major accident blocking highway. Emergency services responding.",
-  "type": "traffic",
-  "severity": "high"
-}

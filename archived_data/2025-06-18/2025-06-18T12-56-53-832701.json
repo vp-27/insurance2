@@ -1,8 +1,0 @@
-{
-  "source": "simulated_traffic",
-  "timestamp": "2025-06-18T12:56:53.832626",
-  "location": "40.7128,-74.006",
-  "content": "Traffic incident: Emergency vehicle response blocking lane. Emergency services responding.",
-  "type": "traffic",
-  "severity": "low"
-}
