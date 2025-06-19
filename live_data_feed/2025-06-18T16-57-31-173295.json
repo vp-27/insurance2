@@ -1,0 +1,9 @@
+{
+  "source": "nyc_open_data",
+  "timestamp": "2025-06-18T16:57:31.173256",
+  "location": "40.7128,-74.006",
+  "content": "NYPD report: FELONY ASSAULT in MANHATTAN",
+  "type": "crime",
+  "severity": "high",
+  "crime_type": "FELONY ASSAULT"
+}

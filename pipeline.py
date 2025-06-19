@@ -1,4 +1,15 @@
-import pathway as pw
+try:
+    import pathway as pw
+except ImportError:
+    # Mock pathway for development
+    class MockPathway:
+        def __init__(self):
+            pass
+        def run(self):
+            print("Mock Pathway pipeline running...")
+            return "Mock pipeline completed"
+    pw = MockPathway()
+
 import asyncio
 import json
 import os
