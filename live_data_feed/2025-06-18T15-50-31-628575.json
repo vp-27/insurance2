@@ -1,9 +1,0 @@
-{
-  "source": "demo_news",
-  "timestamp": "2025-06-18T15:50:31.628537",
-  "location": "25 Columbus Dr, Jersey City, NJ",
-  "content": "DEMO: Heavy rainfall causes minor flooding in downtown area. City crews monitoring situation.",
-  "type": "news",
-  "severity": "low",
-  "is_demo": true
-}
