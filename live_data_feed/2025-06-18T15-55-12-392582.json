@@ -1,9 +1,0 @@
-{
-  "source": "demo_test",
-  "timestamp": "2025-06-18T15:55:12.392571",
-  "location": "25 Columbus Dr, Jersey City, NJ",
-  "content": "DEMO: Flash flood warning issued for area near 25 Columbus Dr, Jersey City, NJ. Water levels rising rapidly, evacuation orders in effect.",
-  "type": "flood",
-  "severity": "high",
-  "is_demo": true
-}
