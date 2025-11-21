@@ -29,6 +29,63 @@
             --glass-shadow: 0 35px 65px rgba(3, 7, 18, 0.55);
         }
 
+        .app-body.theme-light {
+            --bg-deep: #f4f6fb;
+            --bg-surface: rgba(255, 255, 255, 0.92);
+            --bg-soft: rgba(255, 255, 255, 0.88);
+            --border-soft: rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.2);
+            --text-high: #0f172a;
+            --text-mid: #1e293b;
+            --text-muted: #475569;
+            --accent-cyan: #0891b2;
+            --accent-purple: #7c3aed;
+            --accent-amber: #d97706;
+            --accent-rose: #dc2626;
+            --accent-green: #0f766e;
+            --glass-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+        }
+
+        .app-body.theme-light .glass-panel {
+            background: var(--bg-surface);
+            border-color: var(--border-soft);
+        }
+
+        .app-body.theme-light .chip,
+        .app-body.theme-light .metric-pill,
+        .app-body.theme-light .analysis-chip,
+        .app-body.theme-light .timeline-list,
+        .app-body.theme-light .data-feed,
+        .app-body.theme-light .summary-card .body {
+            background: rgba(15, 23, 42, 0.03);
+            border-color: rgba(15, 23, 42, 0.08);
+        }
+
+        .app-body.theme-light .nav-links button {
+            color: var(--text-muted);
+        }
+
+        .app-body.theme-light .nav-links button.active,
+        .app-body.theme-light .nav-links button:hover {
+            color: var(--text-high);
+            border-color: rgba(15, 23, 42, 0.15);
+            background: rgba(15, 23, 42, 0.05);
+        }
+
+        .app-body.theme-light .status-pill.status-live {
+            color: #064e3b;
+        }
+
+        .app-body.theme-light .status-pill.status-idle {
+            color: var(--text-mid);
+            border-color: rgba(15, 23, 42, 0.25);
+        }
+
+        .app-body.theme-light .tone-low { color: #0f766e; }
+        .app-body.theme-light .tone-medium { color: #b45309; }
+        .app-body.theme-light .tone-high { color: #be123c; }
+        .app-body.theme-light .tone-critical { color: #991b1b; }
+
         * {
             box-sizing: border-box;
         }
@@ -44,7 +101,7 @@
         .app-shell {
             position: relative;
             min-height: 100vh;
-            padding: 3rem 0 4rem;
+            padding: clamp(2rem, 4vw, 4rem) 0 4.5rem;
             overflow: hidden;
         }
 
@@ -69,9 +126,9 @@
         .content-wrap {
             position: relative;
             z-index: 1;
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 1.5rem;
+            padding: 0 clamp(1.25rem, 3vw, 2.5rem);
         }
 
         .glass-panel {
@@ -183,9 +240,10 @@
 
         .hero-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: minmax(280px, 0.85fr) minmax(280px, 1.15fr);
+            gap: 2.2rem;
+            margin-bottom: 1.75rem;
+            align-items: center;
         }
 
         .hero-copy h2 {
@@ -227,8 +285,9 @@
 
         .layout-grid {
             display: grid;
-            grid-template-columns: minmax(320px, 1fr) 1.6fr;
-            gap: 1.5rem;
+            grid-template-columns: minmax(320px, 0.9fr) minmax(380px, 1.1fr);
+            gap: 1.75rem;
+            align-items: start;
         }
 
         .control-card .field-label {
@@ -438,6 +497,44 @@
             margin-top: 0.35rem;
         }
 
+        .theme-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .theme-pill {
+            flex: 0 0 auto;
+            padding: 0.75rem 1.1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 150px;
+            background: rgba(15, 23, 42, 0.65);
+            color: var(--text-mid);
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .theme-pill.active {
+            border-color: rgba(34, 211, 238, 0.7);
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .theme-pill strong {
+            display: block;
+            font-size: 1rem;
+            color: var(--text-high);
+        }
+
+        .theme-pill small {
+            color: var(--text-muted);
+        }
+
         .tone-low { color: var(--accent-green); }
         .tone-medium { color: var(--accent-amber); }
         .tone-high { color: #fb923c; }
@@ -569,16 +666,31 @@
         .notification-panel.error { border-color: rgba(248, 113, 113, 0.7); }
         .notification-panel.info { border-color: rgba(96, 165, 250, 0.7); }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
             .layout-grid {
                 grid-template-columns: 1fr;
             }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 900px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
             .nav-bar {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .nav-bar {
+                padding: 1.25rem 1.5rem;
+            }
+            .glass-panel {
+                padding: 1.5rem;
+            }
+            .hero-copy h2 {
+                font-size: 2.1rem;
             }
         }
     </style>
@@ -587,6 +699,13 @@
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
+        const NAV_LINKS = ['Overview', 'Signals', 'Operations', 'Settings'];
+        const NAV_TARGETS = {
+            Overview: 'overview-section',
+            Signals: 'signals-section',
+            Operations: 'operations-section',
+            Settings: 'settings-section'
+        };
 
         function App() {
             const [address, setAddress] = useState('25 Columbus Dr, Jersey City, NJ');
@@ -602,8 +721,8 @@
             const [notification, setNotification] = useState(null);
             const [activeAlerts, setActiveAlerts] = useState([]);
             const [alertHistory, setAlertHistory] = useState([]);
-
-            const navLinks = ['Overview', 'Signals', 'Operations', 'Settings'];
+            const [activeSection, setActiveSection] = useState('Overview');
+            const [preferredTheme, setPreferredTheme] = useState('midnight');
             const alertOptions = [
                 { type: 'fire', label: 'Fire', icon: 'fas fa-fire', detail: 'Structural ignition', theme: 'alert-fire' },
                 { type: 'flood', label: 'Flood', icon: 'fas fa-water', detail: 'Hydrologic surge', theme: 'alert-flood' },
@@ -630,6 +749,16 @@
                     const next = [...prev, { id: `${type}-${Date.now()}`, type, status, time: new Date().toLocaleTimeString() }];
                     return next.slice(-6);
                 });
+            };
+
+            const handleNavClick = (link) => {
+                setActiveSection(link);
+                const targetId = NAV_TARGETS[link];
+                if (!targetId) return;
+                const element = document.getElementById(targetId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             };
 
             const fetchSystemStats = async () => {
@@ -772,8 +901,41 @@
             }, [address]);
 
             useEffect(() => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            const matched = Object.entries(NAV_TARGETS).find(([, id]) => id === entry.target.id);
+                            if (matched) {
+                                setActiveSection(matched[0]);
+                            }
+                        }
+                    });
+                }, { threshold: 0.25, rootMargin: '-20% 0px -60% 0px' });
+
+                const targetIds = Object.values(NAV_TARGETS);
+                targetIds.forEach((id) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        observer.observe(element);
+                    }
+                });
+
+                return () => observer.disconnect();
+            }, []);
+
+            useEffect(() => {
                 fetchSystemStats();
             }, []);
+
+            useEffect(() => {
+                const body = document.querySelector('.app-body');
+                if (!body) return;
+                if (preferredTheme === 'luminous') {
+                    body.classList.add('theme-light');
+                } else {
+                    body.classList.remove('theme-light');
+                }
+            }, [preferredTheme]);
 
             const documentsIndexed = systemStats?.documents_indexed ?? '—';
             const vectorSize = systemStats?.vector_store_size ?? '—';
@@ -783,13 +945,21 @@
             const quoteDelta = quoteValue ? Math.round(quoteValue - 500) : 0;
             const riskTone = assessment ? getRiskTone(assessment.risk_score) : 'tone-idle';
             const gaugePercent = assessment ? Math.min(100, Math.max(0, (assessment.risk_score / 10) * 100)) : 0;
-            const gaugeColorMap = {
-                'tone-low': '#34d399',
-                'tone-medium': '#fbbf24',
-                'tone-high': '#fb923c',
-                'tone-critical': '#f87171',
-                'tone-idle': '#475569'
-            };
+            const gaugeColorMap = preferredTheme === 'luminous'
+                ? {
+                    'tone-low': '#0f766e',
+                    'tone-medium': '#b45309',
+                    'tone-high': '#be123c',
+                    'tone-critical': '#991b1b',
+                    'tone-idle': '#94a3b8'
+                }
+                : {
+                    'tone-low': '#34d399',
+                    'tone-medium': '#fbbf24',
+                    'tone-high': '#fb923c',
+                    'tone-critical': '#f87171',
+                    'tone-idle': '#475569'
+                };
             const gaugeStyle = {
                 background: `conic-gradient(${gaugeColorMap[riskTone]} ${gaugePercent}%, rgba(30, 41, 59, 0.9) ${gaugePercent}%)`
             };
@@ -843,12 +1013,18 @@
                                 <div className="brand-logo">S</div>
                                 <div className="brand-copy">
                                     <h1>Sunny</h1>
-                                    <span>Fluid risk intelligence</span>
+                                    <span>Underwriting copilot</span>
                                 </div>
                             </div>
                             <div className="nav-links">
-                                {navLinks.map((link, idx) => (
-                                    <button key={link} className={idx === 0 ? 'active' : ''}>{link}</button>
+                                {NAV_LINKS.map((link) => (
+                                    <button
+                                        key={link}
+                                        className={link === activeSection ? 'active' : ''}
+                                        onClick={() => handleNavClick(link)}
+                                    >
+                                        {link}
+                                    </button>
                                 ))}
                             </div>
                             <div className="flex items-center gap-3">
@@ -861,11 +1037,11 @@
                             </div>
                         </div>
 
-                        <div className="glass-panel hero-grid">
+                        <div className="glass-panel hero-grid" id="overview-section">
                             <div className="hero-copy">
                                 <p className="status-pill status-live" style={{ display: 'inline-flex' }}>Live scenario cockpit</p>
                                 <h2>Instrumented insurance decisioning</h2>
-                                <p>Monitor evolving exposures, inject live scenarios, and brief clients with cinematic clarity. Sunny orchestrates RAG intelligence, geospatial data, and premium modeling in one fluid canvas.</p>
+                                <p>Monitor evolving exposures, inject live scenarios, and brief clients with cinematic clarity. Sunny orchestrates RAG intelligence, geospatial data, and premium modeling inside a single shared canvas.</p>
                                 <div className="flex flex-wrap gap-3">
                                     <button className="primary-btn" onClick={fetchAssessment} disabled={loading || !address.trim()}>
                                         {loading ? 'Analyzing…' : 'Run assessment'}
@@ -885,7 +1061,7 @@
                             </div>
                         </div>
 
-                        <div className="layout-grid">
+                        <div className="layout-grid" id="signals-section">
                             <div className="space-y-6">
                                 <div className="glass-panel control-card">
                                     <div className="flex items-center justify-between mb-4">
@@ -928,7 +1104,7 @@
                                     </div>
                                 </div>
 
-                                <div className="glass-panel">
+                                <div className="glass-panel" id="operations-section">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
                                             <p className="text-sm text-gray-400 uppercase tracking-[0.4em]">Alert lab</p>
@@ -1051,6 +1227,28 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="glass-panel" id="settings-section">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-sm text-gray-400 uppercase tracking-[0.4em]">Interface direction</p>
+                                    <h3 className="text-2xl mt-1">Appearance preferences</h3>
+                                </div>
+                                <span className="chip">{preferredTheme === 'midnight' ? 'Midnight glass' : 'Luminous daylight'}</span>
+                            </div>
+                            <p className="text-gray-400 mb-4">Choose the tone you want to lead presentations with. We default to a cinematic dark shell for legibility across telemetry, but a lighter finance-forward palette is ready when you need a softer boardroom feel.</p>
+                            <div className="theme-options mb-4">
+                                <button type="button" className={`theme-pill ${preferredTheme === 'midnight' ? 'active' : ''}`} onClick={() => setPreferredTheme('midnight')}>
+                                    <strong>Midnight glass</strong>
+                                    <small>Best for control rooms + extended analysis</small>
+                                </button>
+                                <button type="button" className={`theme-pill ${preferredTheme === 'luminous' ? 'active' : ''}`} onClick={() => setPreferredTheme('luminous')}>
+                                    <strong>Luminous daylight</strong>
+                                    <small>Presentation-ready, high-trust finance vibe</small>
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-500">Recommendation: stay in Midnight for day-to-day underwriting, then switch to Luminous when sharing trend decks or exec briefs where a light mode feels more traditional.</p>
                         </div>
                     </div>
                 </div>
