@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import asyncio
 import threading
 import os
+from pathlib import Path
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
@@ -32,6 +32,8 @@ app.add_middleware(
 rag_pipeline = None
 data_fetcher = None
 data_manager = None
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_PATH = BASE_DIR / "static" / "ui" / "index.html"
 
 class AssessmentRequest(BaseModel):
     address: str
@@ -77,6 +79,11 @@ async def startup_event():
 @app.get("/", response_class=HTMLResponse)
 async def get_frontend():
     """Serve the React frontend"""
+    if FRONTEND_PATH.exists():
+        try:
+            return HTMLResponse(content=FRONTEND_PATH.read_text(encoding="utf-8"))
+        except OSError as exc:
+            print(f"Failed to load custom frontend: {exc}")
     html_content = """
     <!DOCTYPE html>
     <html lang="en">
