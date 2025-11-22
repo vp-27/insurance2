@@ -619,6 +619,24 @@ class DataFetcher:
         except Exception as e:
             print(f"Error removing demo files: {e}")
 
+    def fetch_all_for_location(self, lat: float, lon: float):
+        """Fetch all available data for a specific location on-demand"""
+        print(f"🔄 Fetching on-demand data for coordinates: {lat}, {lon}")
+        
+        # Run fetches in parallel or sequentially
+        # Note: Some APIs might be rate limited, so we'll do them sequentially for safety
+        self.fetch_weather_alerts(lat, lon)
+        self.fetch_crime_data(lat, lon)
+        self.fetch_earthquake_data(lat, lon)
+        self.fetch_traffic_incidents(lat, lon)
+        self.fetch_infrastructure_alerts(lat, lon)
+        
+        # News is typically city-based, not coordinate-based, but we can try
+        # We'll skip news for on-demand to avoid API rate limits and irrelevant results
+        # self.fetch_news_alerts() 
+        
+        print(f"✅ On-demand data fetch completed for {lat}, {lon}")
+
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()

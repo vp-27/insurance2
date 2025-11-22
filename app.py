@@ -1298,15 +1298,38 @@ async def get_assessment(request: AssessmentRequest) -> Dict[str, Any]:
         if not rag_pipeline:
             raise HTTPException(status_code=500, detail="RAG pipeline not initialized")
         
-        # Perform RAG query
-        result = await rag_pipeline.query_rag(request.address, request.query)
+        # 1. Strict Address Validation
+        print(f"🔍 Validating address: {request.address}")
+        lat, lon = rag_pipeline.location_analyzer.get_coordinates(request.address)
+        
+        if lat is None or lon is None:
+            print(f"❌ Invalid address rejected: {request.address}")
+            raise HTTPException(status_code=400, detail="Invalid address provided. Please enter a valid, specific location.")
+            
+        # 2. On-Demand Data Fetching
+        if data_fetcher:
+            # Run in background to not block too long, or await if critical?
+            # For "live" feel, we should await at least some data or just trigger it.
+            # Since fetch_all_for_location is synchronous (calls sync methods), we can run it.
+            # But it might take a few seconds. Let's run it in a thread or just call it.
+            # Given the user wants "live" data, we should probably wait for it.
+            try:
+                await asyncio.to_thread(data_fetcher.fetch_all_for_location, lat, lon)
+            except Exception as e:
+                print(f"⚠️ Data fetch warning: {e}")
+        
+        # 3. Perform RAG query with validated coordinates
+        result = await rag_pipeline.query_rag(request.address, request.query, lat=lat, lon=lon)
         
         return {
             "success": True,
             "data": result
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"🚨 Assessment error: {e}")
         raise HTTPException(status_code=500, detail=f"Assessment error: {str(e)}")
 
 @app.post("/inject_test_alert")

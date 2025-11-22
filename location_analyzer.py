@@ -18,6 +18,11 @@ class LocationAnalyzer:
         """Get latitude and longitude for an address with retry logic"""
         max_retries = 3
         
+        # Basic validation to reject obviously fake addresses
+        if len(address.strip()) < 5 or " " not in address.strip():
+            print(f"❌ Invalid address format: {address}")
+            return None, None
+
         for attempt in range(max_retries):
             try:
                 # Increase timeout and add retry logic
@@ -37,15 +42,17 @@ class LocationAnalyzer:
                 print(f"❌ Geocoding error for {address}: {e}")
                 break
         
-        print(f"❌ Failed to geocode {address} after {max_retries} attempts, using fallback")
+        print(f"❌ Failed to geocode {address} after {max_retries} attempts")
         return None, None
     
-    def analyze_location_risk_factors(self, address: str) -> Dict[str, Any]:
+    def analyze_location_risk_factors(self, address: str, lat: float = None, lon: float = None) -> Dict[str, Any]:
         """Analyze location-specific risk factors"""
-        lat, lon = self.get_coordinates(address)
+        if lat is None or lon is None:
+            lat, lon = self.get_coordinates(address)
         
         if lat is None or lon is None:
-            return self.get_default_risk_factors(address)
+            # Return None to indicate validation failure
+            return None
         
         risk_factors = {
             'latitude': lat,
