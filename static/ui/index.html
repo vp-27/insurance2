@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,439 +8,766 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
         :root {
-            /* Light Mode Primary */
-            --bg-deep: #f8fafc;
-            /* Slate 50 */
-            --bg-surface: rgba(255, 255, 255, 0.9);
-            --bg-card: #ffffff;
-            --border-soft: #e2e8f0;
-            /* Slate 200 */
-            --border-highlight: #38bdf8;
-            --text-primary: #0f172a;
-            /* Slate 900 */
-            --text-secondary: #64748b;
-            /* Slate 500 */
-            --accent-cyan: #0ea5e9;
-            /* Sky 500 */
-            --accent-purple: #8b5cf6;
-            /* Violet 500 */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(18, 18, 26, 0.8);
+            --bg-elevated: rgba(26, 26, 38, 0.9);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(99, 102, 241, 0.4);
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-indigo: #6366f1;
+            --accent-violet: #8b5cf6;
+            --accent-cyan: #06b6d4;
             --accent-emerald: #10b981;
-            /* Emerald 500 */
+            --accent-amber: #f59e0b;
             --accent-rose: #f43f5e;
-            /* Rose 500 */
-            --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            --gradient-danger: linear-gradient(135deg, #dc2626 0%, #f43f5e 100%);
+            --gradient-warning: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            --glow-primary: 0 0 40px rgba(99, 102, 241, 0.15);
+            --glow-success: 0 0 40px rgba(16, 185, 129, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-deep);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
             color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
+            min-height: 100vh;
             overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        /* Animated Background - Subtle for Light Mode */
-        .bg-gradient-mesh {
+        /* Animated Background */
+        .bg-mesh {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             z-index: -1;
-            background:
-                radial-gradient(circle at 15% 50%, rgba(14, 165, 233, 0.05), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(99, 102, 241, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.06), transparent),
+                radial-gradient(ellipse 50% 30% at 50% 80%, rgba(6, 182, 212, 0.04), transparent);
+            animation: meshMove 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes meshMove {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-20px) scale(1.02); }
+        }
+
+        /* Grain Effect */
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.03;
             pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
 
-        /* Glassmorphism Utilities - Cleaner for Light Mode */
-        .glass-panel {
-            background: var(--bg-surface);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-soft);
-            box-shadow: var(--glass-shadow);
-            border-radius: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .glass-panel:hover {
-            border-color: #cbd5e1;
-            /* Slate 300 */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .glass-card {
+        /* Glass Cards */
+        .glass {
             background: var(--bg-card);
-            border: 1px solid var(--border-soft);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        .glass:hover {
+            border-color: var(--border-active);
+            box-shadow: var(--glow-primary);
         }
 
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+        .glass-elevated {
+            background: var(--bg-elevated);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        /* Form Elements */
-        .input-field {
-            background: #ffffff;
-            border: 1px solid var(--border-soft);
+        /* Input Styling */
+        .input-modern {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 14px 18px;
             color: var(--text-primary);
-            transition: all 0.2s;
-        }
-
-        .input-field:focus {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
             outline: none;
         }
 
-        /* Buttons */
+        .input-modern:focus {
+            border-color: var(--accent-indigo);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input-modern::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Button Styling */
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 14px;
+            padding: 14px 28px;
             color: white;
             font-weight: 600;
-            transition: transform 0.1s, box-shadow 0.2s;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
         }
 
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
         }
 
-        .btn-primary:active {
-            transform: translateY(0);
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Risk Score Gauge */
+        .risk-gauge {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .risk-gauge svg {
+            transform: rotate(-90deg);
+        }
+
+        .risk-gauge circle {
+            fill: none;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-out, stroke 0.5s ease;
+        }
+
+        .risk-gauge .bg-ring {
+            stroke: rgba(255, 255, 255, 0.05);
+        }
+
+        .risk-gauge .progress-ring {
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        /* Status Indicators */
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .status-dot.live {
+            background: var(--accent-emerald);
+            box-shadow: 0 0 10px var(--accent-emerald);
+        }
+
+        .status-dot.live::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            opacity: 0.3;
+            animation: pulse 2s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .status-dot.offline {
+            background: var(--text-muted);
+        }
+
+        /* Scenario Buttons */
+        .scenario-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scenario-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border-active);
+            transform: translateY(-2px);
+        }
+
+        .scenario-btn.active {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--accent-indigo);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .scenario-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .scenario-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
         }
 
         /* Map Container */
         #map-container {
-            height: 400px;
-            width: 100%;
-            border-radius: 0.75rem;
+            height: 350px;
+            border-radius: 16px;
             overflow: hidden;
-            border: 1px solid var(--border-soft);
-            position: relative;
-            z-index: 0;
+            border: 1px solid var(--border-subtle);
         }
 
-        /* Leaflet Customization - Light Mode */
         .leaflet-container {
-            background: #f8fafc;
-            font-family: 'Inter', sans-serif;
+            background: var(--bg-secondary);
         }
 
         .leaflet-popup-content-wrapper {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
+            background: var(--bg-elevated);
             color: var(--text-primary);
-            border: 1px solid var(--border-soft);
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
         }
 
         .leaflet-popup-tip {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-elevated);
         }
 
-        /* Animations */
-        @keyframes pulse-ring {
-            0% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
+        /* Stat Cards */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
 
-            100% {
-                transform: scale(2);
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-active);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Toast Notification */
+        .toast {
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
                 opacity: 0;
             }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
-        .animate-pulse-ring::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 50%;
-            border: 2px solid var(--accent-rose);
-            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
         }
 
-        .status-dot {
-            height: 8px;
-            width: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
-        .status-live {
-            background-color: var(--accent-emerald);
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        .loading-spinner {
+            animation: spin 1s linear infinite;
         }
 
-        .status-idle {
-            background-color: var(--text-secondary);
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Typography */
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Assessment Panel */
+        .assessment-content {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .assessment-content strong, 
+        .assessment-content b {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Risk Level Badges */
+        .risk-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-badge.low {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .risk-badge.medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        .risk-badge.high {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+        }
+
+        .risk-badge.critical {
+            background: rgba(220, 38, 38, 0.2);
+            color: #f87171;
         }
     </style>
 </head>
-
 <body>
-    <div class="bg-gradient-mesh"></div>
+    <div class="bg-mesh"></div>
+    <div class="grain"></div>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
-        // --- Components ---
-
-        const MapComponent = ({ lat, lon, address, riskScore }) => {
+        // Map Component
+        const MapView = ({ lat, lon, address, riskScore }) => {
             const mapRef = useRef(null);
-            const mapInstanceRef = useRef(null);
+            const mapInstance = useRef(null);
             const markerRef = useRef(null);
 
             useEffect(() => {
-                if (!mapInstanceRef.current) {
-                    // Initialize map
-                    mapInstanceRef.current = L.map(mapRef.current).setView([lat || 39.8283, lon || -98.5795], 4);
+                if (!mapInstance.current && mapRef.current) {
+                    mapInstance.current = L.map(mapRef.current, {
+                        zoomControl: false
+                    }).setView([lat || 39.8283, lon || -98.5795], 4);
 
-                    // Light mode tiles (CartoDB Voyager)
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    L.control.zoom({ position: 'bottomright' }).addTo(mapInstance.current);
+
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap, CARTO',
                         subdomains: 'abcd',
                         maxZoom: 19
-                    }).addTo(mapInstanceRef.current);
+                    }).addTo(mapInstance.current);
                 }
 
-                const map = mapInstanceRef.current;
-
-                if (lat && lon) {
-                    map.setView([lat, lon], 16, { animate: true, duration: 1.5 });
+                if (mapInstance.current && lat && lon) {
+                    mapInstance.current.flyTo([lat, lon], 15, { duration: 1.5 });
 
                     if (markerRef.current) {
                         markerRef.current.setLatLng([lat, lon]);
                     } else {
-                        markerRef.current = L.marker([lat, lon]).addTo(map);
+                        const customIcon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="
+                                width: 24px;
+                                height: 24px;
+                                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                                border-radius: 50%;
+                                border: 3px solid white;
+                                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+                            "></div>`,
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 12]
+                        });
+                        markerRef.current = L.marker([lat, lon], { icon: customIcon }).addTo(mapInstance.current);
                     }
 
-                    const popupContent = `
-                        <div class="text-sm font-medium">
-                            <div class="text-cyan-600 mb-1 font-bold">Target Property</div>
-                            <div class="text-slate-800">${address}</div>
-                            ${riskScore ? `<div class="mt-2 pt-2 border-t border-gray-200">Risk Score: <span class="${riskScore > 7 ? 'text-red-500' : riskScore > 4 ? 'text-yellow-500' : 'text-green-500'} font-bold">${riskScore}/10</span></div>` : ''}
+                    const riskColor = riskScore > 7 ? '#f43f5e' : riskScore > 4 ? '#f59e0b' : '#10b981';
+                    markerRef.current.bindPopup(`
+                        <div style="padding: 8px; min-width: 180px;">
+                            <div style="font-weight: 600; margin-bottom: 8px; color: #6366f1;">📍 Target Property</div>
+                            <div style="font-size: 13px; color: #a1a1aa; margin-bottom: 8px;">${address}</div>
+                            ${riskScore ? `<div style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <span style="color: #71717a;">Risk Score:</span> 
+                                <span style="color: ${riskColor}; font-weight: 700;">${riskScore}/10</span>
+                            </div>` : ''}
                         </div>
-                    `;
-                    markerRef.current.bindPopup(popupContent).openPopup();
+                    `).openPopup();
                 }
-
             }, [lat, lon, address, riskScore]);
 
             return <div id="map-container" ref={mapRef}></div>;
         };
 
-        const StatCard = ({ label, value, icon, trend, color = "text-cyan-600" }) => (
-            <div className="glass-card flex items-center justify-between group hover:bg-slate-50 transition-colors">
-                <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{label}</div>
-                    <div className="text-2xl font-bold font-space text-slate-900">{value}</div>
-                    {trend && <div className="text-xs text-gray-500 mt-1">{trend}</div>}
-                </div>
-                <div className={`p-3 rounded-lg bg-slate-100 ${color} group-hover:scale-110 transition-transform`}>
-                    <i className={icon + " text-xl"}></i>
-                </div>
-            </div>
-        );
-
-        const RiskGauge = ({ score }) => {
-            // Significantly increased size
+        // Risk Gauge Component
+        const RiskGauge = ({ score, loading }) => {
             const radius = 80;
             const circumference = 2 * Math.PI * radius;
             const offset = circumference - ((score || 0) / 10) * circumference;
 
-            let color = "text-green-500";
-            if (score > 4) color = "text-yellow-500";
-            if (score > 7) color = "text-red-500";
+            const getColor = (s) => {
+                if (s <= 3) return '#10b981';
+                if (s <= 6) return '#f59e0b';
+                return '#f43f5e';
+            };
 
             return (
-                <div className="relative flex items-center justify-center w-64 h-64 mx-auto my-4">
-                    <svg className="transform -rotate-90 w-full h-full">
-                        <circle cx="128" cy="128" r={radius} stroke="currentColor" strokeWidth="16" fill="transparent" className="text-slate-200" />
-                        <circle cx="128" cy="128" r={radius} stroke="currentColor" strokeWidth="16" fill="transparent"
-                            strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-                            className={`${color} transition-all duration-1000 ease-out`} />
+                <div className="risk-gauge">
+                    <svg width="200" height="200" viewBox="0 0 200 200">
+                        <circle className="bg-ring" cx="100" cy="100" r={radius} strokeWidth="12" />
+                        <circle 
+                            className="progress-ring"
+                            cx="100" 
+                            cy="100" 
+                            r={radius}
+                            strokeWidth="12"
+                            stroke={loading ? 'rgba(99, 102, 241, 0.3)' : getColor(score)}
+                            strokeDasharray={circumference}
+                            strokeDashoffset={loading ? circumference : offset}
+                            style={{ filter: `drop-shadow(0 0 8px ${getColor(score)}40)` }}
+                        />
                     </svg>
-                    <div className="absolute text-center">
-                        <div className={`text-6xl font-bold font-space ${color}`}>{score || "-"}</div>
-                        <div className="text-sm text-gray-500 font-medium mt-1">RISK SCORE</div>
+                    <div style={{ 
+                        position: 'absolute', 
+                        top: '50%', 
+                        left: '50%', 
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center'
+                    }}>
+                        {loading ? (
+                            <div>
+                                <i className="fas fa-circle-notch loading-spinner text-3xl text-indigo-400 mb-2"></i>
+                                <div className="text-xs text-zinc-500">Analyzing...</div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="text-5xl font-bold" style={{ color: getColor(score) }}>
+                                    {score || '—'}
+                                </div>
+                                <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Risk Score</div>
+                            </>
+                        )}
                     </div>
                 </div>
             );
         };
 
-        // --- Main App ---
+        // Stat Card Component
+        const StatCard = ({ icon, label, value, trend, color = 'indigo' }) => {
+            const colors = {
+                indigo: 'from-indigo-500 to-violet-500',
+                emerald: 'from-emerald-500 to-teal-500',
+                amber: 'from-amber-500 to-orange-500',
+                rose: 'from-rose-500 to-pink-500'
+            };
 
+            return (
+                <div className="stat-card">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center`}>
+                            <i className={`${icon} text-white text-sm`}></i>
+                        </div>
+                        {trend && (
+                            <span className={`text-xs font-medium ${trend > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">{value}</div>
+                    <div className="text-sm text-zinc-500">{label}</div>
+                </div>
+            );
+        };
+
+        // Toast Component
+        const Toast = ({ message, type, onClose }) => {
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+
+            const colors = {
+                success: 'border-emerald-500/30 bg-emerald-500/10',
+                error: 'border-rose-500/30 bg-rose-500/10',
+                info: 'border-indigo-500/30 bg-indigo-500/10',
+                warning: 'border-amber-500/30 bg-amber-500/10'
+            };
+
+            useEffect(() => {
+                const timer = setTimeout(onClose, 5000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            return (
+                <div className={`toast fixed top-6 right-6 z-50 glass p-4 pr-12 max-w-sm ${colors[type]} border`}>
+                    <div className="flex items-start gap-3">
+                        <i className={`fas ${icons[type]} text-lg ${type === 'success' ? 'text-emerald-400' : type === 'error' ? 'text-rose-400' : type === 'warning' ? 'text-amber-400' : 'text-indigo-400'}`}></i>
+                        <p className="text-sm text-zinc-300">{message}</p>
+                    </div>
+                    <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            );
+        };
+
+        // Main App
         function App() {
-            // State
             const [address, setAddress] = useState('1600 Pennsylvania Avenue NW, Washington, DC');
-            const [query, setQuery] = useState('Assess comprehensive risk factors including seismic and civil unrest.');
+            const [query, setQuery] = useState('Analyze comprehensive property risk including weather, crime, and structural factors.');
             const [assessment, setAssessment] = useState(null);
             const [loading, setLoading] = useState(false);
             const [systemStats, setSystemStats] = useState(null);
-            const [activeAlerts, setActiveAlerts] = useState([]);
+            const [activeScenarios, setActiveScenarios] = useState([]);
             const [notification, setNotification] = useState(null);
-            const [autoRefresh, setAutoRefresh] = useState(false);
+            const [lastUpdate, setLastUpdate] = useState(null);
 
-            // Derived State for Map
-            const mapLat = assessment?.location_factors?.latitude || (assessment?.data?.location_factors?.latitude);
-            const mapLon = assessment?.location_factors?.longitude || (assessment?.data?.location_factors?.longitude);
+            const mapLat = assessment?.location_factors?.latitude;
+            const mapLon = assessment?.location_factors?.longitude;
 
-            // Effects
-            useEffect(() => {
-                fetchSystemStats();
-                const interval = setInterval(fetchSystemStats, 30000);
-                return () => clearInterval(interval);
-            }, []);
-
-            // Actions
-            const fetchSystemStats = async () => {
+            const fetchStats = useCallback(async () => {
                 try {
                     const res = await fetch('/stats');
-                    if (res.ok) setSystemStats(await res.json());
-                } catch (e) { console.error(e); }
-            };
+                    if (res.ok) {
+                        const data = await res.json();
+                        setSystemStats(data);
+                    }
+                } catch (err) {
+                    console.error('Stats fetch error:', err);
+                }
+            }, []);
 
-            const fetchAssessment = async () => {
-                if (!address.trim()) return;
+            useEffect(() => {
+                fetchStats();
+                const interval = setInterval(fetchStats, 30000);
+                return () => clearInterval(interval);
+            }, [fetchStats]);
+
+            const runAssessment = async () => {
+                if (!address.trim()) {
+                    setNotification({ type: 'warning', message: 'Please enter a property address' });
+                    return;
+                }
+
                 setLoading(true);
+                setAssessment(null);
+
                 try {
                     const res = await fetch('/get_assessment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ address, query })
                     });
+
                     const data = await res.json();
-                    if (res.ok) {
+
+                    if (res.ok && data.success) {
                         setAssessment(data.data);
-                        setNotification({ type: 'success', message: 'Assessment updated successfully' });
+                        setLastUpdate(new Date().toLocaleTimeString());
+                        setNotification({ type: 'success', message: 'Risk assessment completed successfully' });
+                        await fetchStats();
                     } else {
                         throw new Error(data.detail || 'Assessment failed');
                     }
-                } catch (e) {
-                    setNotification({ type: 'error', message: e.message });
+                } catch (err) {
+                    setNotification({ type: 'error', message: err.message || 'Failed to generate assessment' });
                 } finally {
                     setLoading(false);
                 }
             };
 
-            const injectTestAlert = async (type) => {
-                setNotification({ type: 'info', message: `Injecting ${type} alert...` });
+            const injectScenario = async (type) => {
+                const newScenarios = activeScenarios.includes(type)
+                    ? activeScenarios.filter(s => s !== type)
+                    : [...activeScenarios, type];
+
+                setActiveScenarios(newScenarios);
+                setNotification({ type: 'info', message: `${type.charAt(0).toUpperCase() + type.slice(1)} scenario ${newScenarios.includes(type) ? 'activated' : 'deactivated'}` });
+
                 try {
-                    const res = await fetch('/inject_test_alert', {
+                    await fetch('/inject_test_alert', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ address, alert_type: type, active_alerts: activeAlerts })
+                        body: JSON.stringify({ 
+                            address, 
+                            alert_type: type, 
+                            active_alerts: newScenarios 
+                        })
                     });
-                    if (res.ok) {
-                        setActiveAlerts(prev => [...prev, type]);
-                        fetchAssessment(); // Refresh to see impact
+
+                    if (assessment) {
+                        setTimeout(runAssessment, 1000);
                     }
-                } catch (e) {
-                    setNotification({ type: 'error', message: 'Failed to inject alert' });
+                } catch (err) {
+                    console.error('Scenario injection error:', err);
                 }
             };
 
-            // Render Helpers
             const getRiskLevel = (score) => {
-                if (!score) return 'Unknown';
-                if (score <= 3) return 'Low Risk';
-                if (score <= 6) return 'Moderate Risk';
-                return 'High Risk';
+                if (!score) return { label: 'Unknown', class: '' };
+                if (score <= 3) return { label: 'Low Risk', class: 'low' };
+                if (score <= 6) return { label: 'Moderate Risk', class: 'medium' };
+                if (score <= 8) return { label: 'High Risk', class: 'high' };
+                return { label: 'Critical Risk', class: 'critical' };
             };
 
+            const scenarios = [
+                { type: 'fire', icon: 'fa-fire', color: 'from-orange-500 to-red-500', label: 'Fire' },
+                { type: 'flood', icon: 'fa-water', color: 'from-blue-500 to-cyan-500', label: 'Flood' },
+                { type: 'crime', icon: 'fa-shield-halved', color: 'from-amber-500 to-yellow-500', label: 'Crime' },
+                { type: 'earthquake', icon: 'fa-house-crack', color: 'from-purple-500 to-violet-500', label: 'Seismic' }
+            ];
+
+            const riskLevel = getRiskLevel(assessment?.risk_score);
+
             return (
-                <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
+                <div className="min-h-screen p-4 md:p-6 lg:p-8">
+                    {notification && (
+                        <Toast 
+                            message={notification.message} 
+                            type={notification.type} 
+                            onClose={() => setNotification(null)} 
+                        />
+                    )}
 
                     {/* Header */}
-                    <header className="flex items-center justify-between mb-8 glass-panel p-4">
+                    <header className="glass-elevated p-4 md:p-6 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                                <i className="fas fa-shield-alt text-white text-xl"></i>
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                                <i className="fas fa-sun text-white text-xl"></i>
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold tracking-tight text-slate-900">Sunny <span className="font-light text-slate-500">Risk Studio</span></h1>
-                                <div className="flex items-center gap-2 text-xs text-gray-500">
-                                    <span className={`status-dot ${systemStats ? 'status-live' : 'status-idle'}`}></span>
+                                <h1 className="text-2xl font-bold tracking-tight">
+                                    Sunny <span className="text-zinc-500 font-normal">Risk Studio</span>
+                                </h1>
+                                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                                    <div className={`status-dot ${systemStats ? 'live' : 'offline'}`}></div>
                                     {systemStats ? 'System Online' : 'Connecting...'}
                                 </div>
                             </div>
                         </div>
-                        <div className="flex gap-3">
-                            <button className="glass-card px-4 py-2 text-sm hover:bg-slate-50 transition-colors text-slate-600" onClick={() => setAutoRefresh(!autoRefresh)}>
-                                <i className={`fas fa-sync-alt mr-2 ${autoRefresh ? 'animate-spin text-cyan-600' : ''}`}></i>
-                                {autoRefresh ? 'Auto-Sync On' : 'Auto-Sync Off'}
-                            </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="text-right hidden md:block">
+                                <div className="text-xs text-zinc-500">Documents Indexed</div>
+                                <div className="text-lg font-bold font-mono">{systemStats?.documents_indexed || '—'}</div>
+                            </div>
+                            <div className="w-px h-10 bg-zinc-800 hidden md:block"></div>
+                            <div className="text-right hidden md:block">
+                                <div className="text-xs text-zinc-500">Vector Store</div>
+                                <div className="text-lg font-bold font-mono">{systemStats?.vector_store_size || '—'}</div>
+                            </div>
                         </div>
                     </header>
 
-                    {/* Notification Toast */}
-                    {notification && (
-                        <div className={`fixed top-4 right-4 p-4 rounded-lg shadow-2xl backdrop-blur-md border z-50 animate-fade-in-down ${notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-                                notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-                                    'bg-blue-50 border-blue-200 text-blue-800'
-                            }`}>
-                            <div className="flex items-center gap-3">
-                                <i className={`fas ${notification.type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}`}></i>
-                                {notification.message}
-                                <button onClick={() => setNotification(null)} className="ml-4 opacity-50 hover:opacity-100"><i className="fas fa-times"></i></button>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Main Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-                        {/* Left Column: Controls & Map (7 cols) */}
+                        {/* Left Column */}
                         <div className="lg:col-span-7 space-y-6">
-
-                            {/* Map Section */}
-                            <div className="glass-panel p-1">
-                                <MapComponent
+                            {/* Map */}
+                            <div className="glass p-4">
+                                <MapView
                                     lat={mapLat}
                                     lon={mapLon}
                                     address={address}
@@ -449,135 +775,218 @@
                                 />
                             </div>
 
-                            {/* Input Controls */}
-                            <div className="glass-panel p-6">
-                                <h3 className="text-lg font-medium mb-4 flex items-center gap-2 text-slate-800">
-                                    <i className="fas fa-search-location text-cyan-600"></i>
-                                    Property Analysis
-                                </h3>
+                            {/* Input Panel */}
+                            <div className="glass p-6">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
+                                        <i className="fas fa-search-location text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h2 className="font-semibold">Property Analysis</h2>
+                                        <p className="text-sm text-zinc-500">Enter location for risk assessment</p>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1">Property Address</label>
+                                        <label className="block text-xs text-zinc-500 uppercase tracking-wider mb-2">Property Address</label>
                                         <div className="relative">
                                             <input
                                                 type="text"
                                                 value={address}
                                                 onChange={(e) => setAddress(e.target.value)}
-                                                className="w-full input-field rounded-lg p-3 pl-10 font-mono text-sm"
-                                                placeholder="Enter full address..."
+                                                className="input-modern pl-11 font-mono text-sm"
+                                                placeholder="Enter full property address..."
                                             />
-                                            <i className="fas fa-map-marker-alt absolute left-3 top-3.5 text-gray-400"></i>
+                                            <i className="fas fa-map-marker-alt absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
                                         </div>
                                     </div>
+
                                     <div>
-                                        <label className="block text-xs uppercase tracking-wider text-gray-500 mb-1">Assessment Focus</label>
+                                        <label className="block text-xs text-zinc-500 uppercase tracking-wider mb-2">Assessment Focus</label>
                                         <textarea
                                             value={query}
                                             onChange={(e) => setQuery(e.target.value)}
-                                            className="w-full input-field rounded-lg p-3 text-sm h-24 resize-none"
-                                            placeholder="Specific risks to analyze..."
-                                        ></textarea>
+                                            className="input-modern text-sm resize-none h-24"
+                                            placeholder="Specific risk factors to analyze..."
+                                        />
                                     </div>
+
                                     <button
-                                        onClick={fetchAssessment}
+                                        onClick={runAssessment}
                                         disabled={loading}
-                                        className="w-full btn-primary rounded-lg p-3 shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
+                                        className="btn-primary w-full flex items-center justify-center gap-3"
                                     >
-                                        {loading ? <i className="fas fa-circle-notch animate-spin"></i> : <i className="fas fa-bolt"></i>}
-                                        {loading ? 'Analyzing Risk Profile...' : 'Generate Assessment'}
+                                        {loading ? (
+                                            <>
+                                                <i className="fas fa-circle-notch loading-spinner"></i>
+                                                Analyzing Risk Profile...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-bolt"></i>
+                                                Generate Assessment
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Simulation Controls */}
-                            <div className="glass-panel p-6">
-                                <h3 className="text-lg font-medium mb-4 flex items-center gap-2 text-slate-800">
-                                    <i className="fas fa-flask text-purple-500"></i>
-                                    Scenario Injection
-                                </h3>
+                            {/* Scenario Panel */}
+                            <div className="glass p-6">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                                        <i className="fas fa-flask text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h2 className="font-semibold">Scenario Simulation</h2>
+                                        <p className="text-sm text-zinc-500">Test risk response scenarios</p>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {['fire', 'flood', 'crime', 'earthquake'].map(type => (
+                                    {scenarios.map(({ type, icon, color, label }) => (
                                         <button
                                             key={type}
-                                            onClick={() => injectTestAlert(type)}
-                                            className="glass-card p-3 text-center hover:bg-slate-50 transition-colors flex flex-col items-center gap-2"
+                                            onClick={() => injectScenario(type)}
+                                            disabled={loading}
+                                            className={`scenario-btn ${activeScenarios.includes(type) ? 'active' : ''}`}
                                         >
-                                            <i className={`fas fa-${type === 'crime' ? 'mask' : type === 'earthquake' ? 'house-crack' : type} text-xl ${type === 'fire' ? 'text-orange-500' :
-                                                    type === 'flood' ? 'text-blue-500' :
-                                                        type === 'crime' ? 'text-yellow-500' : 'text-purple-500'
-                                                }`}></i>
-                                            <span className="text-xs uppercase font-medium text-slate-600">{type}</span>
+                                            <div className={`scenario-icon bg-gradient-to-br ${color}`}>
+                                                <i className={`fas ${icon} text-white`}></i>
+                                            </div>
+                                            <span className="text-sm font-medium">{label}</span>
+                                            {activeScenarios.includes(type) && (
+                                                <span className="text-xs text-indigo-400">Active</span>
+                                            )}
                                         </button>
                                     ))}
                                 </div>
+
+                                {activeScenarios.length > 0 && (
+                                    <div className="mt-4 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                                        <div className="flex items-center gap-2 text-sm text-indigo-300">
+                                            <i className="fas fa-info-circle"></i>
+                                            <span>{activeScenarios.length} scenario{activeScenarios.length > 1 ? 's' : ''} active. Click to toggle off.</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Right Column: Analytics & Results (5 cols) */}
+                        {/* Right Column */}
                         <div className="lg:col-span-5 space-y-6">
-
-                            {/* Key Metrics */}
+                            {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-4">
                                 <StatCard
-                                    label="Est. Premium"
-                                    value={assessment ? `$${Math.round(assessment.insurance_quote)}` : '---'}
                                     icon="fas fa-file-invoice-dollar"
-                                    trend={assessment ? "Monthly" : ""}
-                                    color="text-emerald-600"
+                                    label="Monthly Premium"
+                                    value={assessment ? `$${Math.round(assessment.insurance_quote)}` : '—'}
+                                    color="emerald"
                                 />
                                 <StatCard
-                                    label="Data Points"
-                                    value={assessment ? assessment.relevant_documents : '0'}
                                     icon="fas fa-database"
-                                    color="text-blue-600"
+                                    label="Data Sources"
+                                    value={assessment?.relevant_documents || 0}
+                                    color="indigo"
                                 />
                             </div>
 
-                            {/* Risk Score Card */}
-                            <div className="glass-panel p-6 text-center relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50"></div>
-                                <h3 className="text-lg font-medium mb-6 text-slate-800">Risk Analysis</h3>
-                                <RiskGauge score={assessment?.risk_score} />
-                                <div className="mt-4 text-2xl font-bold tracking-wide text-slate-900">
-                                    {getRiskLevel(assessment?.risk_score)}
+                            {/* Risk Score Panel */}
+                            <div className="glass p-6 text-center">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="font-semibold">Risk Analysis</h2>
+                                    {lastUpdate && (
+                                        <span className="text-xs text-zinc-500">
+                                            <i className="fas fa-clock mr-1"></i>
+                                            {lastUpdate}
+                                        </span>
+                                    )}
                                 </div>
-                                {assessment?.timestamp && (
-                                    <div className="text-xs text-gray-500 mt-2">
-                                        Generated: {new Date(assessment.timestamp).toLocaleTimeString()}
+
+                                <RiskGauge score={assessment?.risk_score} loading={loading} />
+
+                                <div className="mt-6">
+                                    <span className={`risk-badge ${riskLevel.class}`}>
+                                        {riskLevel.label}
+                                    </span>
+                                </div>
+
+                                {assessment?.location_factors?.primary_risks?.length > 0 && (
+                                    <div className="mt-6 pt-6 border-t border-zinc-800">
+                                        <div className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Primary Risk Factors</div>
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            {assessment.location_factors.primary_risks.map((risk, i) => (
+                                                <span key={i} className="px-3 py-1 rounded-full bg-zinc-800 text-xs text-zinc-400">
+                                                    {risk}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* AI Analysis */}
-                            <div className="glass-panel p-6 flex-grow min-h-[300px]">
-                                <h3 className="text-lg font-medium mb-4 flex items-center gap-2 text-slate-800">
-                                    <i className="fas fa-brain text-pink-500"></i>
-                                    Intelligence Brief
-                                </h3>
-                                <div className="prose prose-sm max-w-none">
-                                    {assessment ? (
-                                        <div className="whitespace-pre-wrap text-slate-600 leading-relaxed">
+                            {/* Assessment Report */}
+                            <div className="glass p-6 flex-1">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                                        <i className="fas fa-brain text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h2 className="font-semibold">Intelligence Report</h2>
+                                        <p className="text-sm text-zinc-500">AI-powered analysis</p>
+                                    </div>
+                                </div>
+
+                                <div className="min-h-[200px]">
+                                    {loading ? (
+                                        <div className="space-y-3">
+                                            <div className="skeleton h-4 w-full"></div>
+                                            <div className="skeleton h-4 w-5/6"></div>
+                                            <div className="skeleton h-4 w-4/5"></div>
+                                            <div className="skeleton h-4 w-full"></div>
+                                            <div className="skeleton h-4 w-3/4"></div>
+                                        </div>
+                                    ) : assessment ? (
+                                        <div className="assessment-content text-sm fade-in">
                                             {assessment.risk_summary}
                                         </div>
                                     ) : (
-                                        <div className="text-center text-gray-400 py-12">
-                                            <i className="fas fa-search text-4xl mb-4 opacity-20"></i>
-                                            <p>Enter a property address to generate a comprehensive risk assessment.</p>
+                                        <div className="flex flex-col items-center justify-center h-48 text-center">
+                                            <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mb-4">
+                                                <i className="fas fa-search text-2xl text-zinc-600"></i>
+                                            </div>
+                                            <p className="text-zinc-500 text-sm">Enter a property address to generate a comprehensive risk assessment.</p>
                                         </div>
                                     )}
                                 </div>
-                            </div>
 
-                            {/* System Status */}
-                            <div className="glass-panel p-4">
-                                <div className="flex items-center justify-between text-xs text-gray-500">
-                                    <span>Docs Indexed: {systemStats?.documents_indexed || '-'}</span>
-                                    <span>Vector Store: {systemStats?.vector_store_size || '-'}</span>
-                                </div>
+                                {assessment && (
+                                    <div className="mt-6 pt-6 border-t border-zinc-800">
+                                        <div className="grid grid-cols-2 gap-4 text-center">
+                                            <div>
+                                                <div className="text-xs text-zinc-500 mb-1">Location Type</div>
+                                                <div className="text-sm font-medium capitalize">
+                                                    {assessment.location_factors?.location_description || 'Unknown'}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-zinc-500 mb-1">Base Risk</div>
+                                                <div className="text-sm font-medium">
+                                                    {assessment.location_factors?.base_risk_score?.toFixed(1) || '—'}/10
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-
                         </div>
                     </div>
+
+                    {/* Footer */}
+                    <footer className="mt-8 text-center text-xs text-zinc-600">
+                        <p>Sunny Risk Studio · AI-Powered Insurance Intelligence · Built with RAG + Real-Time Data</p>
+                    </footer>
                 </div>
             );
         }
@@ -585,5 +994,4 @@
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
-
 </html>

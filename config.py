@@ -9,7 +9,7 @@ class Config:
     """Application configuration"""
     
     # API Configuration
-    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "your_openrouter_api_key_here")
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
     OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
     NEWS_API_KEY = os.getenv("NEWS_API_KEY", "your_newsdata_io_api_key_here")
     

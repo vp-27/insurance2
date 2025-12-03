@@ -1296,59 +1296,73 @@ async def get_assessment(request: AssessmentRequest) -> Dict[str, Any]:
     """Get live risk assessment for a property"""
     try:
         if not rag_pipeline:
-            raise HTTPException(status_code=500, detail="RAG pipeline not initialized")
+            raise HTTPException(status_code=500, detail="System initializing. Please try again in a moment.")
         
-        # 1. Strict Address Validation
-        print(f"🔍 Validating address: {request.address}")
+        # 1. Validate and geocode address
+        print(f"🔍 Processing assessment for: {request.address}")
         lat, lon = rag_pipeline.location_analyzer.get_coordinates(request.address)
         
         if lat is None or lon is None:
-            print(f"❌ Invalid address rejected: {request.address}")
-            raise HTTPException(status_code=400, detail="Invalid address provided. Please enter a valid, specific location.")
+            print(f"❌ Invalid address: {request.address}")
+            raise HTTPException(
+                status_code=400, 
+                detail="Could not locate this address. Please enter a valid, complete address (e.g., '123 Main St, City, State')."
+            )
+        
+        print(f"✅ Address resolved to coordinates: {lat:.4f}, {lon:.4f}")
             
-        # 2. On-Demand Data Fetching
+        # 2. Fetch fresh data for this location
         if data_fetcher:
-            # Run in background to not block too long, or await if critical?
-            # For "live" feel, we should await at least some data or just trigger it.
-            # Since fetch_all_for_location is synchronous (calls sync methods), we can run it.
-            # But it might take a few seconds. Let's run it in a thread or just call it.
-            # Given the user wants "live" data, we should probably wait for it.
             try:
                 await asyncio.to_thread(data_fetcher.fetch_all_for_location, lat, lon)
             except Exception as e:
-                print(f"⚠️ Data fetch warning: {e}")
+                # Log but don't fail - we can still assess with existing data
+                print(f"⚠️ Data fetch warning (non-fatal): {e}")
         
         # 3. Perform RAG query with validated coordinates
         result = await rag_pipeline.query_rag(request.address, request.query, lat=lat, lon=lon)
         
         return {
             "success": True,
-            "data": result
+            "data": result,
+            "message": "Assessment completed successfully"
         }
         
     except HTTPException:
         raise
     except Exception as e:
         print(f"🚨 Assessment error: {e}")
-        raise HTTPException(status_code=500, detail=f"Assessment error: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Unable to complete assessment: {str(e)}. Please try again."
+        )
 
 @app.post("/inject_test_alert")
 async def inject_test_alert(request: TestAlertRequest):
-    """Inject a test alert for demo purposes"""
+    """Inject a test alert for demo/scenario simulation purposes"""
     try:
         if not data_fetcher:
-            raise HTTPException(status_code=500, detail="Data fetcher not initialized")
+            raise HTTPException(status_code=500, detail="Data system not ready")
+        
+        print(f"🧪 Scenario injection: {request.alert_type} for {request.address}")
+        print(f"   Active scenarios: {request.active_alerts}")
         
         # Inject the test alert
         data_fetcher.inject_test_alert(request.address, request.alert_type, request.active_alerts)
         
+        # Trigger immediate update in the pipeline
+        if rag_pipeline:
+            rag_pipeline.process_new_files()
+        
         return {
             "success": True,
-            "message": f"Alert status updated for {request.address}"
+            "message": f"Scenario '{request.alert_type}' {'activated' if request.alert_type in request.active_alerts else 'deactivated'} for {request.address}",
+            "active_scenarios": request.active_alerts
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Alert injection error: {str(e)}")
+        print(f"🚨 Scenario injection error: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not apply scenario: {str(e)}")
 
 @app.post("/activate_demo_mode")
 async def activate_demo_mode(request: DemoModeRequest):

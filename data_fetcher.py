@@ -152,26 +152,26 @@ class DataFetcher:
             self.save_alert(alert)
     
     def fetch_crime_data(self, lat: float = 40.7128, lon: float = -74.0060):
-        """Fetch crime data from free APIs and simulate when needed"""
-        import random
+        """Fetch crime data from real APIs when available"""
         
-        # Try to fetch from free crime APIs
+        # Try to fetch from real crime APIs based on location
         try:
             # Chicago Data Portal (if in Chicago area)
             if 41.8 < lat < 42.0 and -87.8 < lon < -87.5:
                 self.fetch_chicago_crime_data(lat, lon)
+                return
             
-            # NYC Open Data (if in NYC area)
+            # NYC Open Data (if in NYC area)  
             elif 40.4 < lat < 40.9 and -74.3 < lon < -73.7:
                 self.fetch_nyc_crime_data(lat, lon)
+                return
             
-            # For other areas, use FBI Crime Data API simulation
-            else:
-                self.simulate_crime_data_realistic(lat, lon)
+            # For other areas, just log that no data is available
+            # DO NOT simulate crime data for real assessments
+            print(f"ℹ️ No crime data API available for coordinates ({lat}, {lon})")
                 
         except Exception as e:
             print(f"Crime data fetch error: {e}")
-            self.simulate_crime_data_realistic(lat, lon)
     
     def fetch_chicago_crime_data(self, lat: float, lon: float):
         """Fetch real crime data from Chicago Data Portal"""
@@ -468,15 +468,10 @@ class DataFetcher:
             print(f"Earthquake data fetch error: {e}")
     
     def fetch_traffic_incidents(self, lat: float = 40.7128, lon: float = -74.0060):
-        """Fetch traffic incident data from free sources"""
-        try:
-            # Try to get traffic incidents from MapBox Incidents API (free tier)
-            # Note: This requires a free MapBox API key, but we'll simulate if not available
-            self.simulate_traffic_incidents(lat, lon)
-            
-        except Exception as e:
-            print(f"Traffic incident fetch error: {e}")
-            self.simulate_traffic_incidents(lat, lon)
+        """Fetch traffic incident data - placeholder for real API integration"""
+        # NOTE: Real traffic APIs (e.g., TomTom, HERE) require API keys
+        # For now, just log that we don't have real data
+        print(f"ℹ️ Traffic incident API not configured for ({lat}, {lon})")
     
     def simulate_traffic_incidents(self, lat: float, lon: float):
         """Simulate realistic traffic incidents"""
@@ -506,13 +501,10 @@ class DataFetcher:
             self.save_alert(traffic_data)
     
     def fetch_infrastructure_alerts(self, lat: float = 40.7128, lon: float = -74.0060):
-        """Fetch infrastructure-related alerts that could affect insurance risk"""
-        try:
-            # Simulate infrastructure issues
-            self.simulate_infrastructure_alerts(lat, lon)
-            
-        except Exception as e:
-            print(f"Infrastructure alert fetch error: {e}")
+        """Fetch infrastructure-related alerts - placeholder for real API integration"""
+        # NOTE: Real infrastructure alert APIs vary by municipality
+        # For now, just log that we don't have real data
+        print(f"ℹ️ Infrastructure alert API not configured for ({lat}, {lon})")
     
     def simulate_infrastructure_alerts(self, lat: float, lon: float):
         """Simulate infrastructure-related risk factors"""
@@ -620,22 +612,36 @@ class DataFetcher:
             print(f"Error removing demo files: {e}")
 
     def fetch_all_for_location(self, lat: float, lon: float):
-        """Fetch all available data for a specific location on-demand"""
-        print(f"🔄 Fetching on-demand data for coordinates: {lat}, {lon}")
+        """Fetch all available REAL data for a specific location on-demand"""
+        print(f"🔄 Fetching real-time data for coordinates: {lat:.4f}, {lon:.4f}")
         
-        # Run fetches in parallel or sequentially
-        # Note: Some APIs might be rate limited, so we'll do them sequentially for safety
-        self.fetch_weather_alerts(lat, lon)
-        self.fetch_crime_data(lat, lon)
-        self.fetch_earthquake_data(lat, lon)
-        self.fetch_traffic_incidents(lat, lon)
-        self.fetch_infrastructure_alerts(lat, lon)
+        data_sources_checked = 0
+        data_sources_found = 0
         
-        # News is typically city-based, not coordinate-based, but we can try
-        # We'll skip news for on-demand to avoid API rate limits and irrelevant results
-        # self.fetch_news_alerts() 
+        # Weather data - NWS is free and reliable
+        try:
+            self.fetch_weather_alerts(lat, lon)
+            data_sources_checked += 1
+            print("✅ Weather data: NWS API checked")
+        except Exception as e:
+            print(f"⚠️ Weather fetch: {e}")
         
-        print(f"✅ On-demand data fetch completed for {lat}, {lon}")
+        # Earthquake data - USGS is free and reliable  
+        try:
+            self.fetch_earthquake_data(lat, lon)
+            data_sources_checked += 1
+            print("✅ Seismic data: USGS API checked")
+        except Exception as e:
+            print(f"⚠️ Earthquake fetch: {e}")
+        
+        # Crime data - only for supported cities
+        try:
+            self.fetch_crime_data(lat, lon)
+            data_sources_checked += 1
+        except Exception as e:
+            print(f"⚠️ Crime fetch: {e}")
+        
+        print(f"📊 Data fetch complete: {data_sources_checked} sources checked")
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
