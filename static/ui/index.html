@@ -17,27 +17,30 @@
 
     <style>
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: rgba(18, 18, 26, 0.8);
-            --bg-elevated: rgba(26, 26, 38, 0.9);
-            --border-subtle: rgba(255, 255, 255, 0.06);
-            --border-active: rgba(99, 102, 241, 0.4);
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
+            /* Light Mode - Professional Insurance Theme */
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-elevated: #ffffff;
+            --bg-hover: #f1f5f9;
+            --border-subtle: #e2e8f0;
+            --border-active: #3b82f6;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
             --accent-indigo: #6366f1;
-            --accent-violet: #8b5cf6;
-            --accent-cyan: #06b6d4;
             --accent-emerald: #10b981;
             --accent-amber: #f59e0b;
             --accent-rose: #f43f5e;
-            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
             --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
             --gradient-danger: linear-gradient(135deg, #dc2626 0%, #f43f5e 100%);
             --gradient-warning: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-            --glow-primary: 0 0 40px rgba(99, 102, 241, 0.15);
-            --glow-success: 0 0 40px rgba(16, 185, 129, 0.15);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
 
         * {
@@ -55,78 +58,55 @@
             line-height: 1.6;
         }
 
-        /* Animated Background */
-        .bg-mesh {
+        /* Subtle Background Pattern */
+        .bg-pattern {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: 
-                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(99, 102, 241, 0.08), transparent),
-                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.06), transparent),
-                radial-gradient(ellipse 50% 30% at 50% 80%, rgba(6, 182, 212, 0.04), transparent);
-            animation: meshMove 20s ease-in-out infinite alternate;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
         }
 
-        @keyframes meshMove {
-            0% { transform: translateY(0) scale(1); }
-            100% { transform: translateY(-20px) scale(1.02); }
-        }
-
-        /* Grain Effect */
-        .grain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.03;
-            pointer-events: none;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        }
-
-        /* Glass Cards */
-        .glass {
+        /* Card Styling */
+        .card {
             background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-elevated {
+            background: var(--bg-elevated);
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass:hover {
-            border-color: var(--border-active);
-            box-shadow: var(--glow-primary);
-        }
-
-        .glass-elevated {
-            background: var(--bg-elevated);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
+            box-shadow: var(--shadow-md);
         }
 
         /* Input Styling */
         .input-modern {
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--bg-secondary);
             border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            padding: 14px 18px;
+            border-radius: 12px;
+            padding: 14px 16px;
             color: var(--text-primary);
             font-size: 15px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             width: 100%;
             outline: none;
         }
 
         .input-modern:focus {
-            border-color: var(--accent-indigo);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .input-modern::placeholder {
@@ -137,35 +117,19 @@
         .btn-primary {
             background: var(--gradient-primary);
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             padding: 14px 28px;
             color: white;
             font-weight: 600;
             font-size: 15px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn-primary:hover::before {
-            left: 100%;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .btn-primary:disabled {
@@ -177,8 +141,8 @@
         /* Risk Score Gauge */
         .risk-gauge {
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: 180px;
+            height: 180px;
             margin: 0 auto;
         }
 
@@ -193,7 +157,7 @@
         }
 
         .risk-gauge .bg-ring {
-            stroke: rgba(255, 255, 255, 0.05);
+            stroke: #e2e8f0;
         }
 
         .risk-gauge .progress-ring {
@@ -210,16 +174,16 @@
 
         .status-dot.live {
             background: var(--accent-emerald);
-            box-shadow: 0 0 10px var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
         }
 
         .status-dot.live::after {
             content: '';
             position: absolute;
-            top: -4px;
-            left: -4px;
-            width: 18px;
-            height: 18px;
+            top: -3px;
+            left: -3px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: var(--accent-emerald);
             opacity: 0.3;
@@ -237,28 +201,29 @@
 
         /* Scenario Buttons */
         .scenario-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .scenario-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: var(--border-active);
+            background: var(--bg-hover);
+            border-color: var(--accent-blue);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .scenario-btn.active {
-            background: rgba(99, 102, 241, 0.1);
-            border-color: var(--accent-indigo);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            background: rgba(59, 130, 246, 0.05);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .scenario-btn:disabled {
@@ -268,50 +233,50 @@
         }
 
         .scenario-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 20px;
         }
 
         /* Map Container */
         #map-container {
-            height: 350px;
-            border-radius: 16px;
+            height: 320px;
+            border-radius: 14px;
             overflow: hidden;
             border: 1px solid var(--border-subtle);
         }
 
         .leaflet-container {
-            background: var(--bg-secondary);
+            background: #f1f5f9;
         }
 
         .leaflet-popup-content-wrapper {
-            background: var(--bg-elevated);
+            background: var(--bg-card);
             color: var(--text-primary);
             border-radius: 12px;
             border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-lg);
         }
 
         .leaflet-popup-tip {
-            background: var(--bg-elevated);
+            background: var(--bg-card);
         }
 
         /* Stat Cards */
         .stat-card {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--bg-secondary);
             border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            border-radius: 14px;
+            padding: 18px;
+            transition: all 0.2s ease;
         }
 
         .stat-card:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: var(--border-active);
+            box-shadow: var(--shadow-md);
         }
 
         /* Scrollbar */
@@ -321,21 +286,21 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: transparent;
+            background: #f1f5f9;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
+            background: #cbd5e1;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #94a3b8;
         }
 
         /* Toast Notification */
         .toast {
-            animation: slideIn 0.4s ease-out;
+            animation: slideIn 0.3s ease-out;
         }
 
         @keyframes slideIn {
@@ -351,10 +316,10 @@
 
         /* Loading States */
         .skeleton {
-            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         @keyframes shimmer {
@@ -378,11 +343,11 @@
 
         /* Custom Animations */
         .fade-in {
-            animation: fadeIn 0.5s ease-out;
+            animation: fadeIn 0.4s ease-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -403,36 +368,66 @@
         .risk-badge {
             padding: 6px 14px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .risk-badge.low {
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
         }
 
         .risk-badge.medium {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
         }
 
         .risk-badge.high {
-            background: rgba(244, 63, 94, 0.15);
-            color: #fb7185;
+            background: rgba(244, 63, 94, 0.1);
+            color: #e11d48;
         }
 
         .risk-badge.critical {
-            background: rgba(220, 38, 38, 0.2);
-            color: #f87171;
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+        }
+
+        /* Section Headers */
+        .section-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Icon containers */
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Label styling */
+        .label {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
         }
     </style>
 </head>
 <body>
-    <div class="bg-mesh"></div>
-    <div class="grain"></div>
+    <div class="bg-pattern"></div>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -452,7 +447,8 @@
 
                     L.control.zoom({ position: 'bottomright' }).addTo(mapInstance.current);
 
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    // Light mode map tiles
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                         attribution: '&copy; OpenStreetMap, CARTO',
                         subdomains: 'abcd',
                         maxZoom: 19
@@ -468,26 +464,26 @@
                         const customIcon = L.divIcon({
                             className: 'custom-marker',
                             html: `<div style="
-                                width: 24px;
-                                height: 24px;
-                                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                                width: 28px;
+                                height: 28px;
+                                background: linear-gradient(135deg, #3b82f6, #6366f1);
                                 border-radius: 50%;
                                 border: 3px solid white;
-                                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+                                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
                             "></div>`,
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12]
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14]
                         });
                         markerRef.current = L.marker([lat, lon], { icon: customIcon }).addTo(mapInstance.current);
                     }
 
-                    const riskColor = riskScore > 7 ? '#f43f5e' : riskScore > 4 ? '#f59e0b' : '#10b981';
+                    const riskColor = riskScore > 7 ? '#dc2626' : riskScore > 4 ? '#d97706' : '#059669';
                     markerRef.current.bindPopup(`
-                        <div style="padding: 8px; min-width: 180px;">
-                            <div style="font-weight: 600; margin-bottom: 8px; color: #6366f1;">📍 Target Property</div>
-                            <div style="font-size: 13px; color: #a1a1aa; margin-bottom: 8px;">${address}</div>
-                            ${riskScore ? `<div style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
-                                <span style="color: #71717a;">Risk Score:</span> 
+                        <div style="padding: 10px; min-width: 200px;">
+                            <div style="font-weight: 600; margin-bottom: 10px; color: #3b82f6; font-size: 14px;">📍 Target Property</div>
+                            <div style="font-size: 13px; color: #475569; margin-bottom: 10px;">${address}</div>
+                            ${riskScore ? `<div style="padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                                <span style="color: #64748b;">Risk Score:</span> 
                                 <span style="color: ${riskColor}; font-weight: 700;">${riskScore}/10</span>
                             </div>` : ''}
                         </div>
@@ -500,30 +496,29 @@
 
         // Risk Gauge Component
         const RiskGauge = ({ score, loading }) => {
-            const radius = 80;
+            const radius = 70;
             const circumference = 2 * Math.PI * radius;
             const offset = circumference - ((score || 0) / 10) * circumference;
 
             const getColor = (s) => {
                 if (s <= 3) return '#10b981';
                 if (s <= 6) return '#f59e0b';
-                return '#f43f5e';
+                return '#ef4444';
             };
 
             return (
                 <div className="risk-gauge">
-                    <svg width="200" height="200" viewBox="0 0 200 200">
-                        <circle className="bg-ring" cx="100" cy="100" r={radius} strokeWidth="12" />
+                    <svg width="180" height="180" viewBox="0 0 180 180">
+                        <circle className="bg-ring" cx="90" cy="90" r={radius} strokeWidth="10" />
                         <circle 
                             className="progress-ring"
-                            cx="100" 
-                            cy="100" 
+                            cx="90" 
+                            cy="90" 
                             r={radius}
-                            strokeWidth="12"
-                            stroke={loading ? 'rgba(99, 102, 241, 0.3)' : getColor(score)}
+                            strokeWidth="10"
+                            stroke={loading ? '#e2e8f0' : getColor(score)}
                             strokeDasharray={circumference}
                             strokeDashoffset={loading ? circumference : offset}
-                            style={{ filter: `drop-shadow(0 0 8px ${getColor(score)}40)` }}
                         />
                     </svg>
                     <div style={{ 
@@ -535,15 +530,15 @@
                     }}>
                         {loading ? (
                             <div>
-                                <i className="fas fa-circle-notch loading-spinner text-3xl text-indigo-400 mb-2"></i>
-                                <div className="text-xs text-zinc-500">Analyzing...</div>
+                                <i className="fas fa-circle-notch loading-spinner text-2xl text-blue-400 mb-1"></i>
+                                <div className="text-xs text-slate-400">Analyzing...</div>
                             </div>
                         ) : (
                             <>
-                                <div className="text-5xl font-bold" style={{ color: getColor(score) }}>
+                                <div className="text-4xl font-bold" style={{ color: getColor(score) }}>
                                     {score || '—'}
                                 </div>
-                                <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Risk Score</div>
+                                <div className="text-xs text-slate-400 mt-1 uppercase tracking-wider">Risk Score</div>
                             </>
                         )}
                     </div>
@@ -552,9 +547,9 @@
         };
 
         // Stat Card Component
-        const StatCard = ({ icon, label, value, trend, color = 'indigo' }) => {
+        const StatCard = ({ icon, label, value, color = 'blue' }) => {
             const colors = {
-                indigo: 'from-indigo-500 to-violet-500',
+                blue: 'from-blue-500 to-indigo-500',
                 emerald: 'from-emerald-500 to-teal-500',
                 amber: 'from-amber-500 to-orange-500',
                 rose: 'from-rose-500 to-pink-500'
@@ -563,17 +558,12 @@
             return (
                 <div className="stat-card">
                     <div className="flex items-center justify-between mb-3">
-                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center`}>
+                        <div className={`icon-box bg-gradient-to-br ${colors[color]}`}>
                             <i className={`${icon} text-white text-sm`}></i>
                         </div>
-                        {trend && (
-                            <span className={`text-xs font-medium ${trend > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
-                            </span>
-                        )}
                     </div>
-                    <div className="text-2xl font-bold text-white mb-1">{value}</div>
-                    <div className="text-sm text-zinc-500">{label}</div>
+                    <div className="text-2xl font-bold text-slate-800 mb-1">{value}</div>
+                    <div className="text-sm text-slate-500">{label}</div>
                 </div>
             );
         };
@@ -588,10 +578,17 @@
             };
 
             const colors = {
-                success: 'border-emerald-500/30 bg-emerald-500/10',
-                error: 'border-rose-500/30 bg-rose-500/10',
-                info: 'border-indigo-500/30 bg-indigo-500/10',
-                warning: 'border-amber-500/30 bg-amber-500/10'
+                success: 'border-emerald-200 bg-emerald-50',
+                error: 'border-rose-200 bg-rose-50',
+                info: 'border-blue-200 bg-blue-50',
+                warning: 'border-amber-200 bg-amber-50'
+            };
+
+            const textColors = {
+                success: 'text-emerald-600',
+                error: 'text-rose-600',
+                info: 'text-blue-600',
+                warning: 'text-amber-600'
             };
 
             useEffect(() => {
@@ -600,12 +597,12 @@
             }, [onClose]);
 
             return (
-                <div className={`toast fixed top-6 right-6 z-50 glass p-4 pr-12 max-w-sm ${colors[type]} border`}>
+                <div className={`toast fixed top-6 right-6 z-50 card p-4 pr-12 max-w-sm ${colors[type]} border-2`}>
                     <div className="flex items-start gap-3">
-                        <i className={`fas ${icons[type]} text-lg ${type === 'success' ? 'text-emerald-400' : type === 'error' ? 'text-rose-400' : type === 'warning' ? 'text-amber-400' : 'text-indigo-400'}`}></i>
-                        <p className="text-sm text-zinc-300">{message}</p>
+                        <i className={`fas ${icons[type]} text-lg ${textColors[type]}`}></i>
+                        <p className={`text-sm ${textColors[type]}`}>{message}</p>
                     </div>
-                    <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
                         <i className="fas fa-times"></i>
                     </button>
                 </div>
@@ -677,13 +674,41 @@
                 }
             };
 
+            const clearAllScenarios = async () => {
+                setActiveScenarios([]);
+                setNotification({ type: 'info', message: 'All scenarios deactivated' });
+
+                try {
+                    // Send empty active_alerts to clear all scenarios
+                    await fetch('/inject_test_alert', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            address, 
+                            alert_type: '', 
+                            active_alerts: [] 
+                        })
+                    });
+
+                    if (assessment) {
+                        setTimeout(runAssessment, 500);
+                    }
+                } catch (err) {
+                    console.error('Clear scenarios error:', err);
+                }
+            };
+
             const injectScenario = async (type) => {
-                const newScenarios = activeScenarios.includes(type)
+                const wasActive = activeScenarios.includes(type);
+                const newScenarios = wasActive
                     ? activeScenarios.filter(s => s !== type)
                     : [...activeScenarios, type];
 
                 setActiveScenarios(newScenarios);
-                setNotification({ type: 'info', message: `${type.charAt(0).toUpperCase() + type.slice(1)} scenario ${newScenarios.includes(type) ? 'activated' : 'deactivated'}` });
+                setNotification({ 
+                    type: 'info', 
+                    message: `${type.charAt(0).toUpperCase() + type.slice(1)} scenario ${wasActive ? 'deactivated' : 'activated'}` 
+                });
 
                 try {
                     await fetch('/inject_test_alert', {
@@ -696,8 +721,9 @@
                         })
                     });
 
+                    // Auto re-run assessment after scenario change
                     if (assessment) {
-                        setTimeout(runAssessment, 1000);
+                        setTimeout(runAssessment, 500);
                     }
                 } catch (err) {
                     console.error('Scenario injection error:', err);
@@ -705,24 +731,24 @@
             };
 
             const getRiskLevel = (score) => {
-                if (!score) return { label: 'Unknown', class: '' };
+                if (!score) return { label: 'Pending', class: '' };
                 if (score <= 3) return { label: 'Low Risk', class: 'low' };
-                if (score <= 6) return { label: 'Moderate Risk', class: 'medium' };
-                if (score <= 8) return { label: 'High Risk', class: 'high' };
-                return { label: 'Critical Risk', class: 'critical' };
+                if (score <= 6) return { label: 'Moderate', class: 'medium' };
+                if (score <= 8) return { label: 'Elevated', class: 'high' };
+                return { label: 'Critical', class: 'critical' };
             };
 
             const scenarios = [
-                { type: 'fire', icon: 'fa-fire', color: 'from-orange-500 to-red-500', label: 'Fire' },
-                { type: 'flood', icon: 'fa-water', color: 'from-blue-500 to-cyan-500', label: 'Flood' },
-                { type: 'crime', icon: 'fa-shield-halved', color: 'from-amber-500 to-yellow-500', label: 'Crime' },
-                { type: 'earthquake', icon: 'fa-house-crack', color: 'from-purple-500 to-violet-500', label: 'Seismic' }
+                { type: 'fire', icon: 'fa-fire', color: 'from-orange-500 to-red-500', label: 'Fire Incident' },
+                { type: 'flood', icon: 'fa-water', color: 'from-blue-500 to-cyan-500', label: 'Flood Alert' },
+                { type: 'crime', icon: 'fa-shield-halved', color: 'from-amber-500 to-yellow-500', label: 'Crime Activity' },
+                { type: 'earthquake', icon: 'fa-house-crack', color: 'from-purple-500 to-violet-500', label: 'Seismic Event' }
             ];
 
             const riskLevel = getRiskLevel(assessment?.risk_score);
 
             return (
-                <div className="min-h-screen p-4 md:p-6 lg:p-8">
+                <div className="min-h-screen p-4 md:p-6 lg:p-8 max-w-screen-2xl mx-auto">
                     {notification && (
                         <Toast 
                             message={notification.message} 
@@ -732,31 +758,31 @@
                     )}
 
                     {/* Header */}
-                    <header className="glass-elevated p-4 md:p-6 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <header className="card-elevated p-4 md:p-5 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                                <i className="fas fa-sun text-white text-xl"></i>
+                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <i className="fas fa-sun text-white text-lg"></i>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight">
-                                    Sunny <span className="text-zinc-500 font-normal">Risk Studio</span>
+                                <h1 className="text-xl font-bold tracking-tight text-slate-800">
+                                    Sunny <span className="text-slate-400 font-medium">Risk Studio</span>
                                 </h1>
-                                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                                <div className="flex items-center gap-2 text-sm text-slate-500">
                                     <div className={`status-dot ${systemStats ? 'live' : 'offline'}`}></div>
-                                    {systemStats ? 'System Online' : 'Connecting...'}
+                                    {systemStats ? 'Underwriting System Online' : 'Connecting...'}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-6">
                             <div className="text-right hidden md:block">
-                                <div className="text-xs text-zinc-500">Documents Indexed</div>
-                                <div className="text-lg font-bold font-mono">{systemStats?.documents_indexed || '—'}</div>
+                                <div className="label mb-1">Documents</div>
+                                <div className="text-lg font-bold font-mono text-slate-700">{systemStats?.documents_indexed || '—'}</div>
                             </div>
-                            <div className="w-px h-10 bg-zinc-800 hidden md:block"></div>
+                            <div className="w-px h-10 bg-slate-200 hidden md:block"></div>
                             <div className="text-right hidden md:block">
-                                <div className="text-xs text-zinc-500">Vector Store</div>
-                                <div className="text-lg font-bold font-mono">{systemStats?.vector_store_size || '—'}</div>
+                                <div className="label mb-1">Vector Store</div>
+                                <div className="text-lg font-bold font-mono text-slate-700">{systemStats?.vector_store_size || '—'}</div>
                             </div>
                         </div>
                     </header>
@@ -766,7 +792,7 @@
                         {/* Left Column */}
                         <div className="lg:col-span-7 space-y-6">
                             {/* Map */}
-                            <div className="glass p-4">
+                            <div className="card p-4">
                                 <MapView
                                     lat={mapLat}
                                     lon={mapLon}
@@ -776,20 +802,20 @@
                             </div>
 
                             {/* Input Panel */}
-                            <div className="glass p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
-                                        <i className="fas fa-search-location text-white"></i>
+                            <div className="card p-6">
+                                <div className="flex items-center gap-3 mb-5">
+                                    <div className="icon-box bg-gradient-to-br from-blue-500 to-indigo-500">
+                                        <i className="fas fa-search-location text-white text-sm"></i>
                                     </div>
                                     <div>
-                                        <h2 className="font-semibold">Property Analysis</h2>
-                                        <p className="text-sm text-zinc-500">Enter location for risk assessment</p>
+                                        <h2 className="section-title">Property Assessment</h2>
+                                        <p className="section-subtitle">Enter property details for risk analysis</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs text-zinc-500 uppercase tracking-wider mb-2">Property Address</label>
+                                        <label className="label block mb-2">Property Address</label>
                                         <div className="relative">
                                             <input
                                                 type="text"
@@ -798,16 +824,16 @@
                                                 className="input-modern pl-11 font-mono text-sm"
                                                 placeholder="Enter full property address..."
                                             />
-                                            <i className="fas fa-map-marker-alt absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+                                            <i className="fas fa-map-marker-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs text-zinc-500 uppercase tracking-wider mb-2">Assessment Focus</label>
+                                        <label className="label block mb-2">Assessment Focus</label>
                                         <textarea
                                             value={query}
                                             onChange={(e) => setQuery(e.target.value)}
-                                            className="input-modern text-sm resize-none h-24"
+                                            className="input-modern text-sm resize-none h-20"
                                             placeholder="Specific risk factors to analyze..."
                                         />
                                     </div>
@@ -824,8 +850,8 @@
                                             </>
                                         ) : (
                                             <>
-                                                <i className="fas fa-bolt"></i>
-                                                Generate Assessment
+                                                <i className="fas fa-chart-line"></i>
+                                                Generate Risk Assessment
                                             </>
                                         )}
                                     </button>
@@ -833,15 +859,26 @@
                             </div>
 
                             {/* Scenario Panel */}
-                            <div className="glass p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                                        <i className="fas fa-flask text-white"></i>
+                            <div className="card p-6">
+                                <div className="flex items-center justify-between mb-5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="icon-box bg-gradient-to-br from-violet-500 to-purple-500">
+                                            <i className="fas fa-flask text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h2 className="section-title">Scenario Testing</h2>
+                                            <p className="section-subtitle">Simulate risk events for training</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="font-semibold">Scenario Simulation</h2>
-                                        <p className="text-sm text-zinc-500">Test risk response scenarios</p>
-                                    </div>
+                                    {activeScenarios.length > 0 && (
+                                        <button
+                                            onClick={clearAllScenarios}
+                                            className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
+                                        >
+                                            <i className="fas fa-times-circle"></i>
+                                            Clear All
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -855,19 +892,21 @@
                                             <div className={`scenario-icon bg-gradient-to-br ${color}`}>
                                                 <i className={`fas ${icon} text-white`}></i>
                                             </div>
-                                            <span className="text-sm font-medium">{label}</span>
+                                            <span className="text-xs font-medium text-slate-600">{label}</span>
                                             {activeScenarios.includes(type) && (
-                                                <span className="text-xs text-indigo-400">Active</span>
+                                                <span className="text-xs text-blue-600 font-medium">
+                                                    <i className="fas fa-check mr-1"></i>Active
+                                                </span>
                                             )}
                                         </button>
                                     ))}
                                 </div>
 
                                 {activeScenarios.length > 0 && (
-                                    <div className="mt-4 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                                        <div className="flex items-center gap-2 text-sm text-indigo-300">
+                                    <div className="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                                        <div className="flex items-center gap-2 text-sm text-blue-700">
                                             <i className="fas fa-info-circle"></i>
-                                            <span>{activeScenarios.length} scenario{activeScenarios.length > 1 ? 's' : ''} active. Click to toggle off.</span>
+                                            <span>{activeScenarios.length} scenario{activeScenarios.length > 1 ? 's' : ''} active. Assessment will include simulated data.</span>
                                         </div>
                                     </div>
                                 )}
@@ -880,24 +919,24 @@
                             <div className="grid grid-cols-2 gap-4">
                                 <StatCard
                                     icon="fas fa-file-invoice-dollar"
-                                    label="Monthly Premium"
-                                    value={assessment ? `$${Math.round(assessment.insurance_quote)}` : '—'}
+                                    label="Est. Monthly Premium"
+                                    value={assessment ? `$${Math.round(assessment.insurance_quote).toLocaleString()}` : '—'}
                                     color="emerald"
                                 />
                                 <StatCard
                                     icon="fas fa-database"
                                     label="Data Sources"
                                     value={assessment?.relevant_documents || 0}
-                                    color="indigo"
+                                    color="blue"
                                 />
                             </div>
 
                             {/* Risk Score Panel */}
-                            <div className="glass p-6 text-center">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="font-semibold">Risk Analysis</h2>
+                            <div className="card p-6 text-center">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h2 className="section-title">Risk Score</h2>
                                     {lastUpdate && (
-                                        <span className="text-xs text-zinc-500">
+                                        <span className="text-xs text-slate-400">
                                             <i className="fas fa-clock mr-1"></i>
                                             {lastUpdate}
                                         </span>
@@ -906,18 +945,18 @@
 
                                 <RiskGauge score={assessment?.risk_score} loading={loading} />
 
-                                <div className="mt-6">
+                                <div className="mt-5">
                                     <span className={`risk-badge ${riskLevel.class}`}>
                                         {riskLevel.label}
                                     </span>
                                 </div>
 
                                 {assessment?.location_factors?.primary_risks?.length > 0 && (
-                                    <div className="mt-6 pt-6 border-t border-zinc-800">
-                                        <div className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Primary Risk Factors</div>
+                                    <div className="mt-5 pt-5 border-t border-slate-100">
+                                        <div className="label mb-3">Primary Risk Factors</div>
                                         <div className="flex flex-wrap gap-2 justify-center">
                                             {assessment.location_factors.primary_risks.map((risk, i) => (
-                                                <span key={i} className="px-3 py-1 rounded-full bg-zinc-800 text-xs text-zinc-400">
+                                                <span key={i} className="px-3 py-1.5 rounded-full bg-slate-100 text-xs text-slate-600 font-medium">
                                                     {risk}
                                                 </span>
                                             ))}
@@ -927,18 +966,18 @@
                             </div>
 
                             {/* Assessment Report */}
-                            <div className="glass p-6 flex-1">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                                        <i className="fas fa-brain text-white"></i>
+                            <div className="card p-6 flex-1">
+                                <div className="flex items-center gap-3 mb-5">
+                                    <div className="icon-box bg-gradient-to-br from-teal-500 to-emerald-500">
+                                        <i className="fas fa-file-alt text-white text-sm"></i>
                                     </div>
                                     <div>
-                                        <h2 className="font-semibold">Intelligence Report</h2>
-                                        <p className="text-sm text-zinc-500">AI-powered analysis</p>
+                                        <h2 className="section-title">Underwriting Report</h2>
+                                        <p className="section-subtitle">AI-generated risk analysis</p>
                                     </div>
                                 </div>
 
-                                <div className="min-h-[200px]">
+                                <div className="min-h-[180px]">
                                     {loading ? (
                                         <div className="space-y-3">
                                             <div className="skeleton h-4 w-full"></div>
@@ -952,27 +991,27 @@
                                             {assessment.risk_summary}
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center h-48 text-center">
-                                            <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mb-4">
-                                                <i className="fas fa-search text-2xl text-zinc-600"></i>
+                                        <div className="flex flex-col items-center justify-center h-44 text-center">
+                                            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                                <i className="fas fa-search text-xl text-slate-400"></i>
                                             </div>
-                                            <p className="text-zinc-500 text-sm">Enter a property address to generate a comprehensive risk assessment.</p>
+                                            <p className="text-slate-500 text-sm max-w-xs">Enter a property address to generate a comprehensive underwriting assessment.</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {assessment && (
-                                    <div className="mt-6 pt-6 border-t border-zinc-800">
+                                    <div className="mt-5 pt-5 border-t border-slate-100">
                                         <div className="grid grid-cols-2 gap-4 text-center">
                                             <div>
-                                                <div className="text-xs text-zinc-500 mb-1">Location Type</div>
-                                                <div className="text-sm font-medium capitalize">
+                                                <div className="label mb-1">Location Type</div>
+                                                <div className="text-sm font-medium text-slate-700 capitalize">
                                                     {assessment.location_factors?.location_description || 'Unknown'}
                                                 </div>
                                             </div>
                                             <div>
-                                                <div className="text-xs text-zinc-500 mb-1">Base Risk</div>
-                                                <div className="text-sm font-medium">
+                                                <div className="label mb-1">Base Risk</div>
+                                                <div className="text-sm font-medium text-slate-700">
                                                     {assessment.location_factors?.base_risk_score?.toFixed(1) || '—'}/10
                                                 </div>
                                             </div>
@@ -984,8 +1023,8 @@
                     </div>
 
                     {/* Footer */}
-                    <footer className="mt-8 text-center text-xs text-zinc-600">
-                        <p>Sunny Risk Studio · AI-Powered Insurance Intelligence · Built with RAG + Real-Time Data</p>
+                    <footer className="mt-8 text-center text-xs text-slate-400">
+                        <p>Sunny Risk Studio · AI-Powered Underwriting Intelligence · Real-Time Data Analytics</p>
                     </footer>
                 </div>
             );

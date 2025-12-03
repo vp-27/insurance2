@@ -717,7 +717,15 @@ Base calculation: ${self.base_cost} × (1 + {self.risk_multiplier} × risk_score
         self.documents = []
         self.embeddings = []
         self.document_metadata = []
+        self.processed_files = set()
         print("🧹 Cleared in-memory document store")
+
+    def rebuild_index(self):
+        """Rebuild the document index from scratch by reloading all files"""
+        print("🔄 Rebuilding document index...")
+        self.clear_document_store()
+        self.load_existing_data()
+        print(f"✅ Index rebuilt with {len(self.documents)} documents")
 
 if __name__ == "__main__":
     from dotenv import load_dotenv

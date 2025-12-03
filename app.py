@@ -1347,16 +1347,22 @@ async def inject_test_alert(request: TestAlertRequest):
         print(f"🧪 Scenario injection: {request.alert_type} for {request.address}")
         print(f"   Active scenarios: {request.active_alerts}")
         
-        # Inject the test alert
+        # Inject the test alert (this also removes old demo files first)
         data_fetcher.inject_test_alert(request.address, request.alert_type, request.active_alerts)
         
-        # Trigger immediate update in the pipeline
+        # Trigger immediate update in the pipeline to reflect changes
         if rag_pipeline:
+            # Force re-index to pick up file deletions/additions
             rag_pipeline.process_new_files()
+            # Rebuild the index to reflect current state
+            rag_pipeline.rebuild_index()
+        
+        is_activating = request.alert_type and request.alert_type in request.active_alerts
+        action = "activated" if is_activating else "deactivated"
         
         return {
             "success": True,
-            "message": f"Scenario '{request.alert_type}' {'activated' if request.alert_type in request.active_alerts else 'deactivated'} for {request.address}",
+            "message": f"Scenario '{request.alert_type}' {action} for {request.address}" if request.alert_type else "All scenarios cleared",
             "active_scenarios": request.active_alerts
         }
         
